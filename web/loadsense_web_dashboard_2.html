@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IV FluidWatch · IoT Infusion Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#060d14;--surface:#0c1520;--surface2:#111e2c;--border:#162030;--accent:#00d4ff;--green:#10e898;--amber:#f5c518;--red:#ff4d6d;--purple:#a78bfa;--text:#dff0ff;--muted:#4a6a80;--glow:rgba(0,212,255,0.15);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:24px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:16px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;flex-wrap:wrap;gap:14px;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#00d4ff,#0077aa);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px var(--glow);}
+.logo-name{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;}
+.logo-name span{color:var(--accent);}
+.logo-sub{font-size:.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.pill{display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:7px 16px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+.dot.off{background:var(--red);box-shadow:0 0 8px var(--red);animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* config */
+.config{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;}
+.cfg-grp{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;}
+.cfg-grp label{font-size:.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.5px;}
+.cfg-grp input, .cfg-grp select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.82rem;outline:none;transition:border-color .2s;width:100%;}
+.cfg-grp input:focus,.cfg-grp select:focus{border-color:var(--accent);}
+.cfg-grp select option{background:var(--surface2);}
+.btn{background:linear-gradient(135deg,var(--accent),#0099bb);color:#000;border:none;border-radius:10px;padding:10px 22px;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:all .2s;box-shadow:0 0 16px var(--glow);white-space:nowrap;}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 24px var(--glow);}
+/* alert bar */
+.alert-bar{display:none;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.35);border-radius:10px;padding:10px 16px;color:#ffb3c1;font-size:.8rem;font-family:'JetBrains Mono',monospace;margin-bottom:16px;}
+/* hero row */
+.hero-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:700px){.hero-row{grid-template-columns:1fr;}}
+.hero-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:28px 24px;text-align:center;position:relative;overflow:hidden;}
+.hero-card::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:260px;height:260px;background:radial-gradient(circle,var(--glow) 0%,transparent 65%);pointer-events:none;}
+.hero-card.green::before{background:radial-gradient(circle,rgba(16,232,152,.1) 0%,transparent 65%);}
+.hero-card.amber::before{background:radial-gradient(circle,rgba(245,197,24,.08) 0%,transparent 65%);}
+.hc-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-family:'JetBrains Mono',monospace;margin-bottom:10px;}
+.hc-value{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:800;line-height:1;font-family:'JetBrains Mono',monospace;transition:all .4s;}
+.hc-unit{font-size:.95rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:4px;}
+.hc-sub{margin-top:8px;font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.c-cyan{color:var(--accent);text-shadow:0 0 30px rgba(0,212,255,.4);}
+.c-green{color:var(--green);text-shadow:0 0 30px rgba(16,232,152,.3);}
+.c-amber{color:var(--amber);}
+/* progress bar */
+.progress-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:20px;}
+.prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.prog-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.prog-pct{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--accent);}
+.prog-track{height:18px;background:var(--surface2);border-radius:999px;overflow:hidden;border:1px solid var(--border);}
+.prog-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--green));transition:width .8s ease;box-shadow:0 0 12px rgba(0,212,255,.4);}
+.prog-fill.warn{background:linear-gradient(90deg,var(--amber),var(--red));}
+.prog-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:.68rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+/* stats row */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;}
+.stat:hover{border-color:var(--accent);}
+.stat-label{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+.stat-val{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.stat-unit{font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-left:3px;}
+/* chart */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;margin-bottom:20px;}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.card-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.chart-wrap{height:220px;position:relative;}
+/* table */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;}
+.data-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.78rem;}
+.data-tbl th{text-align:left;padding:8px 12px;font-size:.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+.data-tbl td{padding:11px 12px;border-bottom:1px solid rgba(22,32,48,.6);}
+.data-tbl tr:hover td{background:var(--surface2);}
+.data-tbl tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
+.b-ok{background:rgba(16,232,152,.12);color:var(--green);}
+.b-low{background:rgba(245,197,24,.12);color:var(--amber);}
+.b-crit{background:rgba(255,77,109,.12);color:var(--red);}
+/* spinner */
+.spinner{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-row{display:none;align-items:center;gap:8px;color:var(--muted);font-size:.8rem;font-family:'JetBrains Mono',monospace;}
+/* refresh toggle */
+.toggle-wrap{display:flex;align-items:center;gap:9px;font-size:.75rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.tog{position:relative;width:36px;height:20px;}
+.tog input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;cursor:pointer;inset:0;background:var(--surface2);border:1px solid var(--border);border-radius:999px;transition:.3s;}
+.tslider::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.3s;}
+input:checked+.tslider{background:var(--accent);border-color:var(--accent);}
+input:checked+.tslider::before{transform:translateX(16px);background:#000;}
+#cd{color:var(--accent);min-width:26px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="logo">
+    <div class="logo-icon">💉</div>
+    <div>
+      <div class="logo-name">IV <span>FluidWatch</span></div>
+      <div class="logo-sub">ESP32 · HX711 · ThingSpeak · IoT Infusion Monitor</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div class="toggle-wrap">
+      <label class="tog"><input type="checkbox" id="autoRefresh" checked><span class="tslider"></span></label>
+      Auto-refresh <span id="cd">15</span>s
+    </div>
+    <div class="pill"><div class="dot" id="statusDot"></div><span id="statusTxt">Waiting…</span></div>
+  </div>
+</header>
+
+<!-- Config -->
+<div class="config">
+  <div class="cfg-grp"><label>Channel ID</label><input id="chId" placeholder="e.g. 2345678"/></div>
+  <div class="cfg-grp"><label>Read API Key</label><input id="apiKey" placeholder="e.g. ABCDEF1234567890"/></div>
+  <div class="cfg-grp"><label>Bag Capacity</label>
+    <select id="bagCap">
+      <option value="250">250 mL</option>
+      <option value="500" selected>500 mL</option>
+      <option value="1000">1000 mL</option>
+      <option value="custom">Custom…</option>
+    </select>
+  </div>
+  <div class="cfg-grp" id="customCapWrap" style="display:none"><label>Custom mL</label><input id="customCap" type="number" placeholder="e.g. 750"/></div>
+  <div class="cfg-grp"><label>Results</label><input id="results" type="number" value="20" min="1" max="100"/></div>
+  <button class="btn" onclick="fetchData()">Fetch Data</button>
+</div>
+
+<div class="alert-bar" id="alertBar"></div>
+
+<!-- Hero row: Remaining / Infused / Rate -->
+<div class="hero-row">
+  <div class="hero-card">
+    <div class="hc-label">💧 Volume Remaining</div>
+    <div class="hc-value c-cyan" id="heroRemaining">—<span class="hc-unit">mL</span></div>
+    <div class="hc-sub" id="heroRemainingTs">Waiting for data…</div>
+  </div>
+  <div class="hero-card green">
+    <div class="hc-label">✅ Volume Infused</div>
+    <div class="hc-value c-green" id="heroInfused">—<span class="hc-unit">mL</span></div>
+    <div class="hc-sub" id="heroInfusedPct">— % completed</div>
+  </div>
+  <div class="hero-card amber">
+    <div class="hc-label">⏱ Infusion Rate</div>
+    <div class="hc-value c-amber" id="heroRate">—<span class="hc-unit">mL/hr</span></div>
+    <div class="hc-sub" id="heroETA">ETA: —</div>
+  </div>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-card">
+  <div class="prog-header">
+    <div class="prog-title">🩺 Infusion Progress</div>
+    <div class="prog-pct" id="progPct">—%</div>
+  </div>
+  <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  <div class="prog-labels">
+    <span>0 mL</span>
+    <span id="progMid">—</span>
+    <span id="progMax">— mL</span>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-row">
+  <div class="stat"><div class="stat-label">Current Weight</div><div class="stat-val c-cyan" id="sWeight">—<span class="stat-unit">kg</span></div></div>
+  <div class="stat"><div class="stat-label">Avg Rate</div><div class="stat-val" style="color:var(--amber)" id="sRate">—<span class="stat-unit">mL/hr</span></div></div>
+  <div class="stat"><div class="stat-label">Min Remaining</div><div class="stat-val" style="color:var(--red)" id="sMin">—<span class="stat-unit">mL</span></div></div>
+  <div class="stat"><div class="stat-label">Max Remaining</div><div class="stat-val" style="color:var(--green)" id="sMax">—<span class="stat-unit">mL</span></div></div>
+  <div class="stat"><div class="stat-label">Data Points</div><div class="stat-val c-cyan" id="sCount">—</div></div>
+</div>
+
+<!-- Chart -->
+<div class="chart-card">
+  <div class="card-header">
+    <div class="card-title">📈 Volume Remaining Over Time</div>
+    <div class="loading-row" id="chartLoad"><div class="spinner"></div>Loading…</div>
+  </div>
+  <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+</div>
+
+<!-- Table -->
+<div class="table-card">
+  <div class="card-header"><div class="card-title">🗃 Readings Log</div></div>
+  <table class="data-tbl">
+    <thead><tr><th>#</th><th>Timestamp</th><th>Weight (kg)</th><th>Remaining (mL)</th><th>Infused (mL)</th><th>Status</th></tr></thead>
+    <tbody id="tBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px;">Enter Channel ID &amp; API Key above, then click Fetch Data.</td></tr></tbody>
+  </table>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// Load cell sends KG. Conversion: kg → g → mL
+// mL = (weightKg - emptyBagKg) * 1000 / DENSITY
+const DENSITY = 1.006; // g/mL — Normal Saline / Dextrose
+let chartInst = null;
+let cdVal = 15;
+let cdTimer = null;
+let autoOn = true;
+
+document.getElementById('bagCap').addEventListener('change', function(){
+  document.getElementById('customCapWrap').style.display = this.value==='custom'?'flex':'none';
+});
+
+function getBagCap(){
+  const v = document.getElementById('bagCap').value;
+  if(v==='custom') return parseFloat(document.getElementById('customCap').value)||500;
+  return parseFloat(v);
+}
+
+// Convert kg reading → mL remaining
+// emptyBagKg: weight of empty bag + giving set in kg (default 0.055 kg = 55g)
+function kgToMl(kg, emptyBagKg = 0.055){
+  const fluidKg = Math.max(0, kg - emptyBagKg);
+  return (fluidKg * 1000) / DENSITY;
+}
+
+async function fetchData(){
+  const ch = document.getElementById('chId').value.trim();
+  const ak = document.getElementById('apiKey').value.trim();
+  const rs = document.getElementById('results').value||20;
+  if(!ch){showAlert('Please enter your ThingSpeak Channel ID.');return;}
+  hideAlert();
+  document.getElementById('chartLoad').style.display='flex';
+  const url = ak
+    ? `https://api.thingspeak.com/channels/${ch}/fields/1.json?api_key=${ak}&results=${rs}`
+    : `https://api.thingspeak.com/channels/${ch}/fields/1.json?results=${rs}`;
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    // field1 = weight in KG
+    const feeds = (data.feeds||[]).filter(f=>f.field1!==null&&f.field1!=='')
+      .map(f=>({time:new Date(f.created_at), weightKg:parseFloat(f.field1)}))
+      .filter(e=>!isNaN(e.weightKg));
+    if(!feeds.length) throw new Error('No data found. Check Channel ID / API Key.');
+    process(feeds);
+    setStatus(true);
+  }catch(err){
+    showAlert('Error: '+err.message);
+    setStatus(false);
+  }finally{
+    document.getElementById('chartLoad').style.display='none';
+  }
+}
+
+function process(feeds){
+  const cap = getBagCap();
+  const entries = feeds.map(f=>{
+    const remaining = Math.min(kgToMl(f.weightKg), cap);
+    const infused   = Math.max(0, cap - remaining);
+    return {...f, remaining, infused};
+  });
+
+  const latest = entries[entries.length-1];
+  const pct = ((latest.infused/cap)*100).toFixed(1);
+  const remaining_vals = entries.map(e=>e.remaining);
+  const minR = Math.min(...remaining_vals);
+  const maxR = Math.max(...remaining_vals);
+
+  // Estimate rate from last 2 points
+  let rate = 0;
+  if(entries.length>=2){
+    const a=entries[entries.length-2], b=entries[entries.length-1];
+    const dhrs=(b.time-a.time)/3600000;
+    if(dhrs>0) rate=Math.max(0,(a.remaining-b.remaining)/dhrs);
+  }
+  const eta = rate>0 ? (latest.remaining/rate) : null;
+  const etaStr = eta!=null ? formatHours(eta) : '—';
+
+  // Hero
+  document.getElementById('heroRemaining').innerHTML = latest.remaining.toFixed(1)+'<span class="hc-unit">mL</span>';
+  document.getElementById('heroRemainingTs').textContent = 'Updated: '+latest.time.toLocaleString();
+  document.getElementById('heroInfused').innerHTML = latest.infused.toFixed(1)+'<span class="hc-unit">mL</span>';
+  document.getElementById('heroInfusedPct').textContent = pct+'% completed';
+  document.getElementById('heroRate').innerHTML = rate.toFixed(1)+'<span class="hc-unit">mL/hr</span>';
+  document.getElementById('heroETA').textContent = 'ETA: '+etaStr;
+
+  // Progress
+  const fill = document.getElementById('progFill');
+  fill.style.width = pct+'%';
+  fill.className = 'prog-fill' + (latest.remaining < cap*0.2 ? ' warn' : '');
+  document.getElementById('progPct').textContent = pct+'%';
+  document.getElementById('progMid').textContent = (cap/2).toFixed(0)+' mL';
+  document.getElementById('progMax').textContent = cap+' mL';
+
+  // Stats — show weight in kg now
+  document.getElementById('sWeight').innerHTML = latest.weightKg.toFixed(4)+'<span class="stat-unit">kg</span>';
+  document.getElementById('sRate').innerHTML = rate.toFixed(1)+'<span class="stat-unit">mL/hr</span>';
+  document.getElementById('sMin').innerHTML = minR.toFixed(1)+'<span class="stat-unit">mL</span>';
+  document.getElementById('sMax').innerHTML = maxR.toFixed(1)+'<span class="stat-unit">mL</span>';
+  document.getElementById('sCount').textContent = entries.length;
+
+  renderChart(entries, cap);
+  renderTable(entries, cap);
+}
+
+function renderChart(entries, cap){
+  const labels = entries.map(e=>e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  if(chartInst) chartInst.destroy();
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  const g1=ctx.createLinearGradient(0,0,0,220);g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
+  const g2=ctx.createLinearGradient(0,0,0,220);g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+  chartInst = new Chart(ctx,{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Remaining (mL)',data:entries.map(e=>e.remaining.toFixed(2)),borderColor:'#00d4ff',backgroundColor:g1,borderWidth:2,pointRadius:entries.length>30?0:3,fill:true,tension:0.4,yAxisID:'y'},
+      {label:'Infused (mL)',data:entries.map(e=>e.infused.toFixed(2)),borderColor:'#10e898',backgroundColor:g2,borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#4a6a80',font:{family:'JetBrains Mono',size:11}}},
+        tooltip:{backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,titleColor:'#4a6a80',bodyColor:'#dff0ff',titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:12},callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}}},
+      scales:{
+        x:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'#0e1c28'}},
+        y:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},callback:v=>v+' mL'},grid:{color:'#0e1c28'},max:cap}
+      },animation:{duration:600}}
+  });
+}
+
+function renderTable(entries, cap){
+  const rows=[...entries].reverse().map((e,i)=>{
+    const pct=((e.infused/cap)*100).toFixed(1);
+    let badge,cls;
+    if(e.remaining>cap*0.5){badge='OK';cls='b-ok';}
+    else if(e.remaining>cap*0.2){badge='LOW';cls='b-low';}
+    else{badge='CRITICAL';cls='b-crit';}
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td>${e.time.toLocaleString()}</td>
+      <td style="color:var(--muted)">${e.weightKg.toFixed(4)}</td>
+      <td style="color:var(--accent);font-weight:600">${e.remaining.toFixed(1)}</td>
+      <td style="color:var(--green)">${e.infused.toFixed(1)} <span style="color:var(--muted)">(${pct}%)</span></td>
+      <td><span class="badge ${cls}">${badge}</span></td>
+    </tr>`;
+  });
+  document.getElementById('tBody').innerHTML=rows.join('');
+}
+
+function formatHours(h){
+  if(h<1) return Math.round(h*60)+' min';
+  return h.toFixed(1)+' hr';
+}
+
+function showAlert(m){const el=document.getElementById('alertBar');el.textContent='⚠ '+m;el.style.display='block';}
+function hideAlert(){document.getElementById('alertBar').style.display='none';}
+function setStatus(on){
+  document.getElementById('statusDot').className='dot'+(on?'':' off');
+  document.getElementById('statusTxt').textContent=on?'Live':'Offline';
+}
+
+// Auto-refresh
+function startCD(){
+  clearInterval(cdTimer);cdVal=15;
+  document.getElementById('cd').textContent=cdVal;
+  cdTimer=setInterval(()=>{
+    cdVal--;document.getElementById('cd').textContent=cdVal;
+    if(cdVal<=0){cdVal=15;fetchData();}
+  },1000);
+}
+function stopCD(){clearInterval(cdTimer);document.getElementById('cd').textContent='—';}
+document.getElementById('autoRefresh').addEventListener('change',function(){
+  autoOn=this.checked;if(autoOn)startCD();else stopCD();
+});
+startCD();
+</script>
+</body>
+</html>
