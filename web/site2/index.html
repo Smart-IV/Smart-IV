@@ -304,7 +304,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 </head>
 <body>
 
-<!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
 <div class="sidebar">
   <div class="sb-logo">
     <div class="sb-appname">🏥 IV FluidWatch</div>
@@ -332,7 +331,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div>
 </div>
 
-<!-- ═══ MAIN ══════════════════════════════════════════════════ -->
 <div class="main">
   <div class="topbar">
     <div>
@@ -347,7 +345,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 
   <div class="content">
 
-    <!-- PAGE: REGISTRY -->
     <div class="page active" id="page-registry">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon">🛏️</div><div class="stat-val" id="sTotal">0</div><div class="stat-lbl">Total Patients</div></div>
@@ -366,7 +363,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       </div>
     </div>
 
-    <!-- PAGE: LIVE OVERVIEW -->
     <div class="page" id="page-overview">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon">🛏️</div><div class="stat-val" id="ovTotal">0</div><div class="stat-lbl">Total Patients</div></div>
@@ -386,7 +382,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="overview-grid" id="overviewGrid"></div>
     </div>
 
-    <!-- PAGE: ALERTS -->
     <div class="page" id="page-alerts">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-val c-crit" id="alCrit">0</div><div class="stat-lbl">Critical (&lt;20%)</div></div>
@@ -406,7 +401,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div id="alertsList"></div>
     </div>
 
-    <!-- PAGE: WARD MANAGEMENT -->
     <div class="page" id="page-wards">
       <div class="sec-hdr">
         <div><div class="sec-title">Ward Management</div><div class="sec-sub">Click a ward to expand · Click patient name to open live monitor</div></div>
@@ -419,7 +413,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div id="wardsList"></div>
     </div>
 
-    <!-- PAGE: DEVICES -->
     <div class="page" id="page-devices">
       <div class="stats-row">
         <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-val" id="dvTotal">0</div><div class="stat-lbl">Total Devices</div></div>
@@ -434,8 +427,35 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="device-grid" id="deviceGrid"></div>
     </div>
 
-    <!-- PAGE: CONFIG -->
     <div class="page" id="page-config">
+
+      <div id="fbSetupBanner" style="display:none;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:13px;padding:18px 20px;margin-bottom:20px;">
+        <div style="font-size:.88rem;font-weight:700;margin-bottom:6px;color:#9a3412;">🔥 Connect Firebase for Shared Data</div>
+        <div style="font-size:.75rem;color:#c2410c;margin-bottom:14px;line-height:1.6;">Without Firebase, each browser has its own separate data. Add your Firebase config below so your whole team sees the same patients in real-time.<br><strong>Free setup: </strong><a href="https://console.firebase.google.com" target="_blank" style="color:#c2410c;">console.firebase.google.com</a> → New Project → Firestore Database → Web App</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="fg"><label>API Key *</label><input id="fbApiKey" class="fmono" type="text" placeholder="AIzaSy…"/></div>
+          <div class="fg"><label>Auth Domain *</label><input id="fbAuthDomain" class="fmono" type="text" placeholder="your-app.firebaseapp.com"/></div>
+          <div class="fg"><label>Project ID *</label><input id="fbProjectId" class="fmono" type="text" placeholder="your-project-id"/></div>
+          <div class="fg"><label>Storage Bucket</label><input id="fbStorageBucket" class="fmono" type="text" placeholder="your-app.appspot.com"/></div>
+          <div class="fg"><label>Messaging Sender ID</label><input id="fbSenderId" class="fmono" type="text" placeholder="123456789"/></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId" class="fmono" type="text" placeholder="1:123…:web:abc…"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveFirebaseConfig()">🔥 Connect Firebase</button>
+        <div style="font-size:.7rem;color:#9a3412;margin-top:8px;">⚠️ Make sure Firestore rules allow read/write — for a team app set rules to <code style="background:rgba(154,52,18,.1);padding:1px 5px;border-radius:3px;">allow read, write: if true;</code></div>
+      </div>
+
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">🔥 Firebase Configuration (Shared Data)</div>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">Connect Firebase Firestore so all team members share the same patient data in real-time.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="fg"><label>API Key</label><input id="fbApiKey2" class="fmono" type="text" placeholder="AIzaSy…"/></div>
+          <div class="fg"><label>Auth Domain</label><input id="fbAuthDomain2" class="fmono" type="text" placeholder="your-app.firebaseapp.com"/></div>
+          <div class="fg"><label>Project ID</label><input id="fbProjectId2" class="fmono" type="text" placeholder="your-project-id"/></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId2" class="fmono" type="text" placeholder="1:123…:web:abc…"/></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveFirebaseConfig2()">🔥 Save &amp; Connect</button>
+        <span id="fbStatus" style="font-size:.75rem;color:var(--green);margin-left:12px;"></span>
+      </div>
       <div class="cfg-panel">
         <div class="cfg-panel-title">⚙️ Global Configuration</div>
         <div class="frow c2">
@@ -481,13 +501,9 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════
-         PAGE: PATIENT DETAIL  (dark IoT monitor — exact)
-    ════════════════════════════════════════════════════ -->
     <div class="page" id="page-detail">
       <div class="det-wrap">
 
-        <!-- Top bar with back button + patient info + status -->
         <div class="det-topbar">
           <div class="det-patient-pill">
             <div class="det-back" onclick="closeDetail()">← Back</div>
@@ -514,7 +530,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 
         <div class="det-alert" id="detAlert"></div>
 
-        <!-- Hero row -->
         <div class="det-hero">
           <div class="dhc">
             <div class="dhc-lbl">💧 Volume Remaining</div>
@@ -533,7 +548,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
           </div>
         </div>
 
-        <!-- Progress bar -->
         <div class="det-prog">
           <div class="dprog-hdr">
             <div class="dprog-title">🩺 Infusion Progress</div>
@@ -543,7 +557,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
           <div class="dprog-lbls"><span>0 mL</span><span id="dProgMid">—</span><span id="dProgMax">— mL</span></div>
         </div>
 
-        <!-- Stats -->
         <div class="det-stats">
           <div class="dstat"><div class="dstat-lbl">Current Weight</div><div class="dstat-val dc-cyan" id="dWeight">—<span class="dstat-unit">kg</span></div></div>
           <div class="dstat"><div class="dstat-lbl">Avg Rate</div><div class="dstat-val dc-amber" id="dAvgRate">—<span class="dstat-unit">mL/hr</span></div></div>
@@ -552,7 +565,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
           <div class="dstat"><div class="dstat-lbl">Data Points</div><div class="dstat-val dc-cyan" id="dCount">—</div></div>
         </div>
 
-        <!-- Chart -->
         <div class="det-chart">
           <div class="dcard-hdr">
             <div class="dcard-title">📈 Volume Remaining Over Time</div>
@@ -561,7 +573,6 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
           <div class="dchart-wrap"><canvas id="dChart"></canvas></div>
         </div>
 
-        <!-- Table -->
         <div class="det-table-card">
           <div class="dcard-hdr"><div class="dcard-title">🗃 Readings Log</div></div>
           <table class="det-tbl">
@@ -572,13 +583,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 
       </div>
     </div>
-    <!-- end page-detail -->
-
-  </div><!-- /content -->
-</div><!-- /main -->
-
-<!-- ═══ PATIENT ASSIGN MODAL ══════════════════════════════════ -->
-<div class="overlay" id="patientModal">
+    </div></div><div class="overlay" id="patientModal">
   <div class="modal">
     <div class="modal-hdr">
       <div><div class="modal-title" id="modalTitle">Assign Patient to Device</div>
@@ -625,6 +630,87 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE SETUP — Replace with YOUR Firebase project config
+// Get these from: Firebase Console → Project Settings → Your Apps
+// ═══════════════════════════════════════════════════════════════
+const HARDCODED_CONFIG = {
+  apiKey: "AIzaSyDixq5gmWhy2QVSKwlDwraBNvu1yY-cCrM",
+  authDomain: "hospital-dashboard-d5d1b.firebaseapp.com",
+  projectId: "hospital-dashboard-d5d1b",
+  storageBucket: "hospital-dashboard-d5d1b.firebasestorage.app",
+  messagingSenderId: "202596574387",
+  appId: "1:202596574387:web:e2da34eaccc3ff93f8bcc6",
+  measurementId: "G-PT57BYVF6B"
+};
+const FIREBASE_CONFIG = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null') || HARDCODED_CONFIG;
+
+let db = null;
+let unsubscribe = null;
+
+function initFirebase(config) {
+  try {
+    const app = initializeApp(config);
+    db = getFirestore(app);
+    listenToPatients();
+    document.getElementById('fbSetupBanner').style.display = 'none';
+    showToast('🔥 Connected to Firebase — data is now shared!', 'success');
+    return true;
+  } catch(e) {
+    showToast('❌ Firebase error: ' + e.message, 'error');
+    return false;
+  }
+}
+
+// Real-time listener — updates patients array whenever Firestore changes
+function listenToPatients() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(collection(db, 'patients'), (snapshot) => {
+    patients = snapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
+    renderRegistry(); renderOverview(); renderAlerts(); renderWards(); renderDevices(); updateGlobalStats();
+    if (patients.length) refreshAllStatus();
+  });
+}
+
+// Save a single patient to Firestore
+window.fbSave = async function(patient) {
+  if (!db) { localSave(); return; }
+  const id = patient.chId || ('p_' + Date.now());
+  await setDoc(doc(db, 'patients', id), patient);
+};
+
+// Delete a patient from Firestore
+window.fbDelete = async function(chId) {
+  if (!db) { localSave(); return; }
+  await deleteDoc(doc(db, 'patients', chId));
+};
+
+// Save Firebase config entered by user
+window.saveFirebaseConfig = function() {
+  const cfg = {
+    apiKey:            document.getElementById('fbApiKey').value.trim(),
+    authDomain:        document.getElementById('fbAuthDomain').value.trim(),
+    projectId:         document.getElementById('fbProjectId').value.trim(),
+    storageBucket:     document.getElementById('fbStorageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fbSenderId').value.trim(),
+    appId:             document.getElementById('fbAppId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) { showToast('⚠️ Enter at least API Key and Project ID', 'error'); return; }
+  localStorage.setItem('hm_firebase_config', JSON.stringify(cfg));
+  initFirebase(cfg);
+};
+
+// Always init Firebase on load (credentials are hardcoded)
+window.addEventListener('load', () => initFirebase(FIREBASE_CONFIG));
+
+// Expose for non-module script
+window._firebaseReady = () => !!db;
+</script>
+
 <script>
 // ═══════════════════════════════════════════════════════════════
 // STATE
@@ -884,9 +970,32 @@ function stopDetCD(){ clearInterval(detCdTimer); document.getElementById('dcd').
 // ═══════════════════════════════════════════════════════════════
 // STORAGE HELPERS
 // ═══════════════════════════════════════════════════════════════
-function save(){ localStorage.setItem('hm_patients',JSON.stringify(patients)); }
+function localSave(){ localStorage.setItem('hm_patients',JSON.stringify(patients)); }
+function save(){ localSave(); /* Firestore save is done per-patient in pushPatient/removePatient */ }
 
-function loadConfig(){
+function saveFirebaseConfig2(){
+  // Sync values from config page inputs to banner inputs so saveFirebaseConfig() works
+  document.getElementById('fbApiKey').value     = document.getElementById('fbApiKey2').value.trim();
+  document.getElementById('fbAuthDomain').value = document.getElementById('fbAuthDomain2').value.trim();
+  document.getElementById('fbProjectId').value  = document.getElementById('fbProjectId2').value.trim();
+  document.getElementById('fbStorageBucket').value = '';
+  document.getElementById('fbSenderId').value   = '';
+  document.getElementById('fbAppId').value      = document.getElementById('fbAppId2').value.trim();
+  window.saveFirebaseConfig();
+  document.getElementById('fbStatus').textContent = '✅ Connected!';
+}
+
+function loadFirebaseConfigUI(){
+  const cfg = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null');
+  if(!cfg) return;
+  document.getElementById('fbApiKey2').value     = cfg.apiKey     || '';
+  document.getElementById('fbAuthDomain2').value = cfg.authDomain || '';
+  document.getElementById('fbProjectId2').value  = cfg.projectId  || '';
+  document.getElementById('fbAppId2').value      = cfg.appId      || '';
+  document.getElementById('fbStatus').textContent = cfg.projectId ? '✅ Connected' : '';
+}
+
+function loadConfig() {
   document.getElementById('cfgWriteKey').value  = localStorage.getItem('hm_write_key')  ||'';
   document.getElementById('cfgAdminName').value = localStorage.getItem('hm_admin_name') ||'Head Nurse';
   document.getElementById('cfgHospital').value  = localStorage.getItem('hm_hospital')   ||'';
@@ -912,9 +1021,17 @@ function exportData(){
 
 function clearAllData(){
   if(!confirm('Clear ALL patient data? This cannot be undone.')) return;
-  patients=[];liveData={};save();
-  renderRegistry();renderOverview();renderAlerts();renderWards();renderDevices();updateGlobalStats();
-  showToast('All data cleared','success');
+  if(window._firebaseReady && window._firebaseReady()){
+    Promise.all(patients.map(p=>window.fbDelete(p.chId||p._id))).then(()=>{
+      patients=[];liveData={};
+      renderRegistry();renderOverview();renderAlerts();renderWards();renderDevices();updateGlobalStats();
+      showToast('All data cleared','success');
+    });
+  } else {
+    patients=[];liveData={};save();
+    renderRegistry();renderOverview();renderAlerts();renderWards();renderDevices();updateGlobalStats();
+    showToast('All data cleared','success');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -975,8 +1092,12 @@ async function pushPatient(){
     if(res.ok&&text!=='0'){
       const p={name,mrn,ward,bed,chId,writeKey,readKey,cap,notes,
         pushedAt:new Date().toISOString(),entryId:text.trim(),status:'active'};
-      if(editIdx>=0) patients[editIdx]=p; else patients.push(p);
-      save();updateGlobalStats();renderRegistry();
+      if(window._firebaseReady && window._firebaseReady()){
+        await window.fbSave(p); // Firestore onSnapshot will re-render all pages
+      } else {
+        if(editIdx>=0) patients[editIdx]=p; else patients.push(p);
+        save();updateGlobalStats();renderRegistry();
+      }
       setPushStatus(`✅ Pushed (Entry #${text.trim()}) — nurse app updates on next refresh.`,'success');
       showToast(`✅ "${name}" assigned to Ch.${chId}`,'success');
       setTimeout(()=>{ closeModal(); fetchPatientLive(p); },2000);
@@ -1116,7 +1237,13 @@ function updateRegistryRow(chId){
 
 function removePatient(idx){
   if(!confirm(`Remove "${patients[idx].name}"?`)) return;
-  patients.splice(idx,1);save();renderRegistry();updateGlobalStats();
+  const p = patients[idx];
+  if(window._firebaseReady && window._firebaseReady()){
+    window.fbDelete(p.chId || p._id);
+    // onSnapshot will re-render automatically
+  } else {
+    patients.splice(idx,1);save();renderRegistry();updateGlobalStats();
+  }
   showToast('Patient removed','success');
 }
 
@@ -1336,6 +1463,7 @@ function showToast(msg,type='success'){
 // ═══════════════════════════════════════════════════════════════
 window.addEventListener('load',()=>{
   loadConfig();
+  loadFirebaseConfigUI();
   renderRegistry();
   updateGlobalStats();
   startAutoRefresh();
