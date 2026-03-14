@@ -1,0 +1,2979 @@
+<!DOCTYPE html>
+<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v3.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IV FluidWatch — Hospital Management</title>
+<link href="./hospimanage 3_files/css2" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════
+   MANAGEMENT DASHBOARD  (light theme)
+═══════════════════════════════════════════════════════ */
+:root{--bg:#f0f4f8;--card:#fff;--border:#e2e8f0;--accent:#0ea5e9;--accent2:#0284c7;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--text:#0f172a;--muted:#64748b;--sidebar:#0f172a;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;}
+
+/* SIDEBAR */
+.sidebar{width:240px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sb-appname{font-size:1.05rem;font-weight:700;color:#fff;}
+.sb-tag{font-size:.62rem;color:#475569;font-family:'JetBrains Mono',monospace;margin-top:2px;}
+.sb-nav{padding:14px 10px;flex:1;overflow-y:auto;}
+.sb-sec{font-size:.58rem;color:#334155;text-transform:uppercase;letter-spacing:1.2px;padding:10px 12px 5px;font-family:'JetBrains Mono',monospace;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:99px;cursor:pointer;color:#94a3b8;font-size:.83rem;font-weight:500;transition:all .14s;margin-bottom:1px;user-select:none;}
+.sb-item:hover{background:rgba(255,255,255,.06);color:#cbd5e1;}
+.sb-item.active{background:rgba(14,165,233,.16);color:#38bdf8;}
+.sb-item .si{font-size:.95rem;width:18px;text-align:center;}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:.6rem;padding:1px 7px;border-radius:999px;font-family:'JetBrains Mono',monospace;}
+.sb-bottom{padding:12px 10px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 12px;}
+.sb-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#0ea5e9,#0284c7);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:#fff;font-weight:700;flex-shrink:0;}
+.sb-uname{font-size:.78rem;font-weight:600;color:#e2e8f0;}
+.sb-urole{font-size:.62rem;color:#475569;font-family:'JetBrains Mono',monospace;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.topbar-title{font-size:1rem;font-weight:700;}
+.topbar-sub{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;}
+.content{padding:22px 26px;overflow-y:auto;flex:1;}
+
+/* BUTTONS */
+.btn{padding:7px 16px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;transition:all .14s;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:var(--accent2);}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);}.btn-outline:hover{background:var(--bg);}
+.btn-red{background:transparent;border:1px solid rgba(239,68,68,.35);color:var(--red);}.btn-red:hover{background:rgba(239,68,68,.06);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#059669;}
+.btn-sm{padding:5px 11px;font-size:.72rem;}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px 18px;}
+.stat-icon{font-size:1.3rem;margin-bottom:7px;}
+.stat-val{font-size:1.65rem;font-weight:700;font-family:'JetBrains Mono',monospace;line-height:1;}
+.stat-lbl{font-size:.7rem;color:var(--muted);margin-top:3px;}
+.stat-sub{font-size:.66rem;font-family:'JetBrains Mono',monospace;margin-top:5px;}
+.c-ok{color:var(--green);}.c-warn{color:var(--amber);}.c-crit{color:var(--red);}.c-purple{color:var(--purple);}
+
+/* SECTION HDR */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.sec-title{font-size:.88rem;font-weight:700;}
+.sec-sub{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.sec-controls{display:flex;gap:8px;align-items:center;}
+
+/* TABLE */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;}
+thead{background:#f8fafc;}
+thead th{padding:11px 15px;text-align:left;font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f8fafc;}
+tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
+.td-bold{font-weight:600;}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:.76rem;color:var(--muted);}
+.td-acts{display:flex;gap:5px;align-items:center;}
+.td-link{color:var(--accent);cursor:pointer;font-weight:600;text-decoration:none;}
+.td-link:hover{text-decoration:underline;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:.65rem;font-weight:600;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.b-ok{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.25);}
+.b-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+.b-crit{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+.b-idle{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2);}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.show{display:flex;}
+.modal{background:var(--card);border-radius:16px;width:100%;max-width:540px;box-shadow:0 20px 60px rgba(0,0,0,.15);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;}
+.modal-hdr{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;}
+.modal-title{font-size:.95rem;font-weight:700;}
+.modal-sub{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.modal-x{width:28px;height:28px;border-radius:7px;background:var(--bg);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+
+/* FORM */
+.frow{display:grid;gap:12px;margin-bottom:12px;}
+.frow.c2{grid-template-columns:1fr 1fr;}
+.frow.c3{grid-template-columns:1fr 1fr 1fr;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fg label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.fg input,.fg select,.fg textarea{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:'Inter',sans-serif;font-size:.82rem;outline:none;width:100%;}
+.fg input:focus,.fg select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.fg .hint{font-size:.65rem;color:var(--muted);margin-top:2px;}
+.fmono{font-family:'JetBrains Mono',monospace!important;}
+.info-box{background:linear-gradient(135deg,#eff6ff,#e0f2fe);border:1px solid #bfdbfe;border-radius:10px;padding:13px 16px;margin-bottom:14px;font-size:.7rem;color:#1e40af;line-height:1.65;}
+.info-box strong{display:block;margin-bottom:4px;font-size:.73rem;}
+.info-box code{background:rgba(30,64,175,.12);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:.67rem;}
+.push-status{display:none;padding:9px 13px;border-radius:8px;font-size:.76rem;margin-top:8px;}
+
+/* WARD ACCORDION */
+.ward-block{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-bottom:12px;overflow:hidden;}
+.ward-hdr{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;transition:background .12s;user-select:none;}
+.ward-hdr:hover{background:#f8fafc;}
+.ward-hdr.open{background:#f0f9ff;border-bottom:1px solid var(--border);}
+.ward-arrow{font-size:.75rem;color:var(--muted);transition:transform .2s;margin-left:auto;}
+.ward-hdr.open .ward-arrow{transform:rotate(180deg);}
+.ward-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#e0f2fe,#bae6fd);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.ward-name{font-size:.92rem;font-weight:700;}
+.ward-meta{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.ward-stats{display:flex;gap:8px;margin-left:auto;margin-right:12px;}
+.ws{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.ws-val{font-size:.85rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.ws-lbl{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.ward-body{display:none;padding:0 0 4px;}
+.ward-body.open{display:block;}
+
+/* ALERT CARD */
+.alert-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;transition:box-shadow .15s;}
+.alert-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06);}
+.alert-card.crit{border-left:4px solid var(--red);}
+.alert-card.warn{border-left:4px solid var(--amber);}
+.alert-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.alert-icon.crit{background:rgba(239,68,68,.1);}
+.alert-icon.warn{background:rgba(245,158,11,.1);}
+.alert-info{flex:1;min-width:0;}
+.alert-name{font-size:.88rem;font-weight:700;margin-bottom:3px;}
+.alert-detail{font-size:.73rem;color:var(--muted);line-height:1.6;}
+.alert-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+.alert-pct{font-size:1.4rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.alert-pct.crit{color:var(--red);}
+.alert-pct.warn{color:var(--amber);}
+.alert-time{font-size:.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+
+/* DEVICE CARD */
+.device-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:20px;}
+.device-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px;transition:box-shadow .15s;}
+.device-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07);}
+.device-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+.device-id{font-size:.88rem;font-weight:700;}
+.device-room{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.device-status{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(16,185,129,.5);}
+.device-status.offline{background:var(--muted);box-shadow:none;}
+.device-row{display:flex;flex-direction:column;gap:7px;}
+.device-field{display:flex;flex-direction:column;gap:2px;}
+.device-field label{font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.device-field .dk{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.dk-copy{cursor:pointer;font-size:.65rem;color:var(--accent);white-space:nowrap;}
+.dk-copy:hover{text-decoration:underline;}
+.device-footer{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+
+/* SORT SELECT */
+.sort-sel{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 11px;font-size:.76rem;color:var(--text);outline:none;cursor:pointer;}
+
+/* OVERVIEW GRID */
+.overview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:22px;}
+.ov-card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px 18px;transition:box-shadow .15s;cursor:pointer;}
+.ov-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);}
+.ov-card.crit{border-top:3px solid var(--red);}
+.ov-card.warn{border-top:3px solid var(--amber);}
+.ov-card.ok{border-top:3px solid var(--green);}
+.ov-card.idle{border-top:3px solid var(--muted);}
+.ov-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.ov-name{font-size:.88rem;font-weight:700;}
+.ov-meta{font-size:.7rem;color:var(--muted);margin-top:2px;}
+.ov-gauge{height:6px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-bottom:10px;}
+.ov-gauge-fill{height:100%;border-radius:999px;transition:width .6s ease;}
+.ov-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.ov-stat{display:flex;flex-direction:column;gap:1px;}
+.ov-stat-lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.ov-stat-val{font-size:.8rem;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.ov-footer{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.ov-ts{font-size:.64rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.ov-view{font-size:.68rem;color:var(--accent);font-weight:600;}
+
+/* CONFIG PANEL */
+.cfg-panel{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:18px 20px;margin-bottom:20px;}
+.cfg-panel-title{font-size:.82rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:#0f172a;color:#fff;padding:11px 18px;border-radius:10px;font-size:.78rem;z-index:2000;display:none;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:320px;}
+.toast.show{display:flex;}
+.toast.success{border-left:3px solid var(--green);}
+.toast.error{border-left:3px solid var(--red);}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;}
+.empty-text{font-size:.85rem;font-weight:600;margin-bottom:4px;}
+.empty-sub{font-size:.76rem;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ═══════════════════════════════════════════════════════
+   PATIENT DETAIL PAGE  (dark IoT theme — exact match)
+═══════════════════════════════════════════════════════ */
+#page-detail{
+  background:#060d14;color:#dff0ff;
+  font-family:'Syne',sans-serif;
+  margin:-22px -26px;
+  padding:0;
+  min-height:calc(100vh - 49px);
+  position:relative;
+  overflow-x:hidden;
+}
+#page-detail::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:48px 48px;pointer-events:none;z-index:0;
+}
+.det-wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:24px;}
+/* Back bar */
+.det-topbar{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid #162030;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.det-back{display:inline-flex;align-items:center;gap:8px;background:#0c1520;border:1px solid #162030;border-radius:10px;padding:9px 18px;font-size:.8rem;color:#4a6a80;cursor:pointer;transition:all .15s;font-family:'JetBrains Mono',monospace;}
+.det-back:hover{border-color:#00d4ff;color:#00d4ff;}
+.det-patient-pill{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.det-avatar{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,rgba(0,212,255,.15),rgba(0,212,255,.3));border:1px solid rgba(0,212,255,.3);display:flex;align-items:center;justify-content:center;font-size:1.4rem;}
+.det-pname{font-size:1.25rem;font-weight:800;letter-spacing:-.4px;}
+.det-pmeta{font-size:.68rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;margin-top:3px;display:flex;flex-wrap:wrap;gap:10px;}
+.det-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.dpill{display:flex;align-items:center;gap:7px;background:#0c1520;border:1px solid #162030;border-radius:999px;padding:7px 16px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#4a6a80;}
+.ddot{width:8px;height:8px;border-radius:50%;background:#10e898;box-shadow:0 0 8px #10e898;animation:dpulse 2s infinite;}
+.ddot.off{background:#ff4d6d;box-shadow:0 0 8px #ff4d6d;animation:none;}
+@keyframes dpulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.dtog-wrap{display:flex;align-items:center;gap:9px;font-size:.75rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;}
+.dtog{position:relative;width:36px;height:20px;}
+.dtog input{opacity:0;width:0;height:0;position:absolute;}
+.dtslider{position:absolute;cursor:pointer;inset:0;background:#111e2c;border:1px solid #162030;border-radius:999px;transition:.3s;}
+.dtslider::before{content:'';position:absolute;width:14px;height:14px;left:2px;top:2px;background:#4a6a80;border-radius:50%;transition:.3s;}
+.dtog input:checked+.dtslider{background:#00d4ff;border-color:#00d4ff;}
+.dtog input:checked+.dtslider::before{transform:translateX(16px);background:#000;}
+#dcd{color:#00d4ff;min-width:26px;text-align:center;}
+/* Alert bar */
+.det-alert{display:none;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.35);border-radius:10px;padding:10px 16px;color:#ffb3c1;font-size:.8rem;font-family:'JetBrains Mono',monospace;margin-bottom:16px;}
+/* Hero cards */
+.det-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+@media(max-width:700px){.det-hero{grid-template-columns:1fr;}}
+.dhc{background:#0c1520;border:1px solid #162030;border-radius:20px;padding:28px 24px;text-align:center;position:relative;overflow:hidden;}
+.dhc::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:260px;height:260px;background:radial-gradient(circle,rgba(0,212,255,0.15) 0%,transparent 65%);pointer-events:none;}
+.dhc.g::before{background:radial-gradient(circle,rgba(16,232,152,.1) 0%,transparent 65%);}
+.dhc.a::before{background:radial-gradient(circle,rgba(245,197,24,.08) 0%,transparent 65%);}
+.dhc-lbl{font-size:.65rem;color:#4a6a80;text-transform:uppercase;letter-spacing:2px;font-family:'JetBrains Mono',monospace;margin-bottom:10px;}
+.dhc-val{font-size:clamp(2.4rem,6vw,4.2rem);font-weight:800;line-height:1;font-family:'JetBrains Mono',monospace;transition:all .4s;}
+.dhc-unit{font-size:.95rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;margin-left:4px;}
+.dhc-sub{margin-top:8px;font-size:.72rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;}
+.dc-cyan{color:#00d4ff;text-shadow:0 0 30px rgba(0,212,255,.4);}
+.dc-green{color:#10e898;text-shadow:0 0 30px rgba(16,232,152,.3);}
+.dc-amber{color:#f5c518;}
+/* Progress */
+.det-prog{background:#0c1520;border:1px solid #162030;border-radius:20px;padding:24px;margin-bottom:20px;}
+.dprog-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.dprog-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4a6a80;}
+.dprog-pct{font-family:'JetBrains Mono',monospace;font-size:.85rem;color:#00d4ff;}
+.dprog-track{height:18px;background:#111e2c;border-radius:999px;overflow:hidden;border:1px solid #162030;}
+.dprog-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#00d4ff,#10e898);transition:width .8s ease;box-shadow:0 0 12px rgba(0,212,255,.4);}
+.dprog-fill.warn{background:linear-gradient(90deg,#f5c518,#ff4d6d);}
+.dprog-lbls{display:flex;justify-content:space-between;margin-top:8px;font-size:.68rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;}
+/* Stats row */
+.det-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px;}
+.dstat{background:#0c1520;border:1px solid #162030;border-radius:14px;padding:18px;}
+.dstat:hover{border-color:#00d4ff;}
+.dstat-lbl{font-size:.65rem;color:#4a6a80;text-transform:uppercase;letter-spacing:1px;font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+.dstat-val{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.dstat-unit{font-size:.72rem;color:#4a6a80;font-family:'JetBrains Mono',monospace;margin-left:3px;}
+/* Chart */
+.det-chart{background:#0c1520;border:1px solid #162030;border-radius:20px;padding:24px;margin-bottom:20px;}
+.dcard-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.dcard-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4a6a80;}
+.dchart-wrap{height:220px;position:relative;}
+.dloading{display:none;align-items:center;gap:8px;color:#4a6a80;font-size:.8rem;font-family:'JetBrains Mono',monospace;}
+.dspinner{width:16px;height:16px;border:2px solid #162030;border-top-color:#00d4ff;border-radius:50%;animation:dspin .6s linear infinite;display:inline-block;}
+@keyframes dspin{to{transform:rotate(360deg);}}
+/* Table */
+.det-table-card{background:#0c1520;border:1px solid #162030;border-radius:20px;padding:24px;}
+.det-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:.78rem;}
+.det-tbl th{text-align:left;padding:8px 12px;font-size:.63rem;color:#4a6a80;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #162030;}
+.det-tbl td{padding:11px 12px;border-bottom:1px solid rgba(22,32,48,.6);}
+.det-tbl tr:hover td{background:#111e2c;}
+.det-tbl tr:last-child td{border-bottom:none;}
+.db-ok{background:rgba(16,232,152,.12);color:#10e898;display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
+.db-low{background:rgba(245,197,24,.12);color:#f5c518;display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
+.db-crit{background:rgba(255,77,109,.12);color:#ff4d6d;display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
+
+/* Smooth value transitions for live updates */
+.dhc-val, .dstat-val {
+  transition: color 0.4s ease;
+}
+.dhc-val.updating {
+  opacity: 0.6;
+  transform: scale(0.97);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.dhc-val.updated {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.dprog-fill {
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.live-pulse {
+  animation: livepulse 1s ease-out;
+}
+@keyframes livepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,212,255,0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(0,212,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
+}
+  .stats-row{grid-template-columns:1fr 1fr;}
+}
+
+/* Vital Signs & Health Analysis */
+.vitals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;}
+.vital-card{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.vital-card-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.vital-patient-name{font-size:.88rem;font-weight:700;}
+.vital-patient-meta{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.vital-inputs{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.vital-input-group{display:flex;flex-direction:column;gap:4px;}
+.vital-input-group label{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:4px;}
+.vital-input-group input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--text);outline:none;width:100%;text-align:center;}
+.vital-input-group input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.vital-input-group .vi-unit{font-size:.6rem;color:var(--muted);text-align:center;}
+.vital-card-foot{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.vital-status-row{display:flex;gap:6px;flex-wrap:wrap;}
+.vs-chip{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font-size:.62rem;font-weight:600;font-family:'JetBrains Mono',monospace;}
+.vs-ok{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.25);}
+.vs-warn{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25);}
+.vs-crit{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);}
+.vs-idle{background:rgba(100,116,139,.1);color:var(--muted);border:1px solid rgba(100,116,139,.2);}
+
+/* AI Analysis Result Panel */
+.ai-analysis-panel{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-bottom:20px;overflow:hidden;}
+.aap-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.aap-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.aap-title{font-size:.88rem;font-weight:700;}
+.aap-sub{font-size:.68rem;color:var(--muted);}
+.aap-body{padding:18px;}
+.aap-empty{text-align:center;padding:32px;color:var(--muted);font-size:.8rem;}
+.aap-patient-result{border:1px solid var(--border);border-radius:11px;margin-bottom:12px;overflow:hidden;}
+.aap-patient-result:last-child{margin-bottom:0;}
+.aap-pr-hdr{padding:11px 15px;background:#f8fafc;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.aap-pr-name{font-size:.85rem;font-weight:700;}
+.aap-pr-vitals{display:flex;gap:8px;font-size:.68rem;font-family:'JetBrains Mono',monospace;color:var(--muted);}
+.aap-pr-body{padding:13px 15px;font-size:.8rem;line-height:1.75;color:var(--text);white-space:pre-wrap;}
+.aap-pr-body strong{color:var(--red);}
+.risk-tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.65rem;font-weight:700;margin:2px 3px;font-family:'JetBrains Mono',monospace;}
+.risk-high{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+.risk-med{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+.risk-low{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.3);}
+.aap-loading{display:none;text-align:center;padding:32px;color:var(--muted);}
+.aap-loading .aap-spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ── Saved Records Panel ── */
+.records-panel{background:var(--card);border:1px solid var(--border);border-radius:13px;margin-bottom:20px;overflow:hidden;}
+.records-hdr{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.records-hdr-left{display:flex;align-items:center;gap:9px;}
+.records-hdr-icon{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+.records-title{font-size:.85rem;font-weight:700;}
+.records-sub{font-size:.68rem;color:var(--muted);}
+.records-list{max-height:360px;overflow-y:auto;}
+.record-item{border-bottom:1px solid var(--border);padding:13px 18px;cursor:pointer;transition:background .1s;}
+.record-item:last-child{border-bottom:none;}
+.record-item:hover{background:#f8fafc;}
+.record-item-hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.record-item-title{font-size:.82rem;font-weight:600;}
+.record-item-meta{font-size:.67rem;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.record-item-preview{font-size:.74rem;color:var(--muted);line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.record-empty{text-align:center;padding:28px;color:var(--muted);font-size:.8rem;}
+.record-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px;}
+.record-detail-overlay.show{display:flex;}
+.record-detail-modal{background:var(--card);border-radius:16px;width:100%;max-width:700px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18);}
+.rdm-hdr{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;}
+.rdm-title{font-size:.92rem;font-weight:700;}
+.rdm-meta{font-size:.68rem;color:var(--muted);margin-top:3px;font-family:'JetBrains Mono',monospace;}
+.rdm-x{width:28px;height:28px;border-radius:7px;background:var(--bg);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;}
+.rdm-body{padding:18px 20px;overflow-y:auto;flex:1;font-size:.8rem;line-height:1.8;white-space:pre-wrap;color:var(--text);}
+.rdm-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;}
+.ai-layout{display:grid;grid-template-columns:1fr 360px;gap:16px;height:calc(100vh - 130px);}
+@media(max-width:1100px){.ai-layout{grid-template-columns:1fr;height:auto;}}
+
+/* Chat Panel */
+.ai-chat-panel{background:var(--card);border:1px solid var(--border);border-radius:13px;display:flex;flex-direction:column;overflow:hidden;}
+.ai-chat-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.ai-chat-hdr-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#8b5cf6,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.ai-chat-title{font-size:.88rem;font-weight:700;}
+.ai-chat-sub{font-size:.68rem;color:var(--muted);margin-top:1px;}
+.ai-model-badge{margin-left:auto;background:rgba(139,92,246,.1);color:#8b5cf6;border:1px solid rgba(139,92,246,.25);padding:3px 10px;border-radius:999px;font-size:.64rem;font-weight:600;font-family:'JetBrains Mono',monospace;}
+
+.ai-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+.ai-msg{display:flex;gap:10px;max-width:90%;}
+.ai-msg.user{align-self:flex-end;flex-direction:row-reverse;}
+.ai-msg-avatar{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;margin-top:2px;}
+.ai-msg.bot .ai-msg-avatar{background:linear-gradient(135deg,#8b5cf6,#7c3aed);}
+.ai-msg.user .ai-msg-avatar{background:linear-gradient(135deg,#0ea5e9,#0284c7);}
+.ai-msg-bubble{padding:10px 14px;border-radius:12px;font-size:.82rem;line-height:1.6;}
+.ai-msg.bot .ai-msg-bubble{background:#f1f5f9;border:1px solid var(--border);border-top-left-radius:3px;color:var(--text);}
+.ai-msg.user .ai-msg-bubble{background:var(--accent);color:#fff;border-top-right-radius:3px;}
+.ai-msg-bubble pre{background:rgba(0,0,0,.06);border-radius:6px;padding:8px 10px;font-size:.74rem;font-family:'JetBrains Mono',monospace;overflow-x:auto;white-space:pre-wrap;margin-top:6px;}
+.ai-msg-time{font-size:.6rem;color:var(--muted);margin-top:4px;text-align:right;}
+.ai-msg.bot .ai-msg-time{text-align:left;}
+
+.ai-typing{display:none;align-self:flex-start;padding:10px 14px;background:#f1f5f9;border:1px solid var(--border);border-radius:12px;border-top-left-radius:3px;}
+.ai-typing span{display:inline-block;width:7px;height:7px;background:var(--muted);border-radius:50%;animation:aitype 1.4s ease-in-out infinite;}
+.ai-typing span:nth-child(2){animation-delay:.2s;}
+.ai-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes aitype{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+
+.ai-input-row{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;}
+.ai-input-row textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-family:'Inter',sans-serif;font-size:.82rem;color:var(--text);outline:none;resize:none;line-height:1.5;max-height:120px;}
+.ai-input-row textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,.1);}
+.ai-send-btn{width:36px;height:36px;border-radius:10px;background:var(--accent);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;transition:background .14s;}
+.ai-send-btn:hover{background:var(--accent2);}
+.ai-send-btn:disabled{background:#cbd5e1;cursor:not-allowed;}
+
+/* Right panel */
+.ai-right-panel{display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.ai-tool-card{background:var(--card);border:1px solid var(--border);border-radius:13px;overflow:hidden;}
+.ai-tool-hdr{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.ai-tool-icon{font-size:1.1rem;}
+.ai-tool-title{font-size:.83rem;font-weight:700;}
+.ai-tool-body{padding:14px 16px;}
+.ai-tool-body p{font-size:.75rem;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.ai-output{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:12px 14px;font-size:.78rem;line-height:1.7;color:var(--text);min-height:80px;max-height:200px;overflow-y:auto;display:none;margin-top:10px;white-space:pre-wrap;}
+.ai-output.show{display:block;}
+.ai-key-warn{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 13px;font-size:.73rem;color:#b45309;display:none;margin-bottom:10px;}
+.ai-key-warn.show{display:block;}
+/* ═══════════════════════════════════════════════════════
+   LOGIN PAGE
+═══════════════════════════════════════════════════════ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+}
+#loginScreen::before{
+  content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(14,165,233,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(14,165,233,.04) 1px,transparent 1px);
+  background-size:52px 52px;pointer-events:none;
+}
+.login-card{
+  position:relative;z-index:1;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:24px;
+  padding:44px 40px;
+  width:100%;max-width:420px;
+  box-shadow:0 32px 80px rgba(0,0,0,.5);
+  backdrop-filter:blur(12px);
+}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo-icon{font-size:2.8rem;margin-bottom:10px;display:block;}
+.login-logo-name{font-size:1.3rem;font-weight:800;color:#fff;letter-spacing:-.3px;}
+.login-logo-sub{font-size:.72rem;color:#475569;font-family:'JetBrains Mono',monospace;margin-top:3px;}
+.login-title{font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;}
+.login-sub{font-size:.75rem;color:#475569;margin-bottom:24px;}
+.login-fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.login-fg label{font-size:.68rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;}
+.login-fg input{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:10px;padding:11px 14px;
+  color:#f1f5f9;font-family:'Inter',sans-serif;font-size:.88rem;
+  outline:none;width:100%;transition:border .15s,box-shadow .15s;
+}
+.login-fg input:focus{border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,.2);}
+.login-fg input::placeholder{color:#334155;}
+.login-btn{
+  width:100%;padding:12px;border-radius:10px;
+  background:linear-gradient(135deg,#0ea5e9,#0284c7);
+  color:#fff;font-size:.88rem;font-weight:700;
+  border:none;cursor:pointer;margin-top:6px;
+  transition:opacity .15s,transform .1s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.login-btn:hover{opacity:.92;}
+.login-btn:active{transform:scale(.98);}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;}
+.login-error{
+  background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);
+  border-radius:9px;padding:10px 14px;
+  font-size:.76rem;color:#fca5a5;
+  margin-bottom:14px;display:none;
+}
+.login-error.show{display:block;}
+.login-forgot{text-align:center;margin-top:14px;}
+.login-forgot a{font-size:.74rem;color:#475569;cursor:pointer;text-decoration:none;transition:color .15s;}
+.login-forgot a:hover{color:#0ea5e9;}
+.login-footer{text-align:center;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.07);}
+.login-footer-txt{font-size:.65rem;color:#334155;font-family:'JetBrains Mono',monospace;}
+.login-spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:lspin .7s linear infinite;display:none;}
+@keyframes lspin{to{transform:rotate(360deg);}}
+
+/* Session bar */
+.session-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;margin:10px 10px 0;
+  background:rgba(14,165,233,.08);
+  border:1px solid rgba(14,165,233,.15);
+  border-radius:9px;
+}
+.session-bar-email{font-size:.7rem;color:#94a3b8;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.session-bar-dot{width:7px;height:7px;border-radius:50%;background:#10b981;flex-shrink:0;box-shadow:0 0 6px #10b981;}
+.logout-btn{
+  background:transparent;border:1px solid rgba(239,68,68,.3);
+  color:#ef4444;font-size:.65rem;font-weight:600;
+  padding:3px 9px;border-radius:6px;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .14s;white-space:nowrap;
+}
+.logout-btn:hover{background:rgba(239,68,68,.08);}
+
+/* Forgot password view */
+.forgot-view{display:none;}
+.forgot-view.show{display:block;}
+.login-view.hide{display:none;}
+
+/* Show password toggle */
+.pw-wrap{position:relative;display:flex;align-items:center;}
+.pw-wrap input{padding-right:42px !important;}
+.pw-toggle{
+  position:absolute;right:12px;
+  background:none;border:none;cursor:pointer;
+  color:#475569;font-size:1rem;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s;
+}
+.pw-toggle:hover{color:#0ea5e9;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" style="display: flex;">
+  <div class="login-card">
+
+    <div class="login-logo">
+      <span class="login-logo-icon">🏥</span>
+      <div class="login-logo-name">IV FluidWatch</div>
+      <div class="login-logo-sub">Hospital Management Console</div>
+    </div>
+
+    <div class="login-view" id="loginView">
+      <div class="login-title">Welcome back</div>
+      <div class="login-sub">Sign in with your Nurse ID and password</div>
+
+      <div class="login-error" id="loginError"></div>
+
+      <div class="login-fg">
+        <label>Nurse ID</label>
+        <input type="text" id="loginEmail" placeholder="e.g. NURSE001" style="text-transform:uppercase" onkeydown="if(event.key===&#39;Enter&#39;) document.getElementById(&#39;loginPass&#39;).focus()">
+      </div>
+      <div class="login-fg">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;) doLogin()">
+          <button class="pw-toggle" type="button" onclick="togglePassword()" id="pwToggleBtn" title="Show/Hide Password">👁️</button>
+        </div>
+      </div>
+
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">
+        <div class="login-spinner" id="loginSpinner"></div>
+        <span id="loginBtnText">🔐 Sign In</span>
+      </button>
+    </div>
+
+    <div class="login-footer">
+      <div class="login-footer-txt">🔒 IV FluidWatch · Hospital Secured Access</div>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar" style="visibility: hidden;">
+  <div class="sb-logo">
+    <div class="sb-appname">🏥 IV FluidWatch</div>
+    <div class="sb-tag">Hospital Management Console</div>
+  </div>
+  <div class="sb-nav">
+    <div class="sb-sec">Monitoring</div>
+    <div class="sb-item active" onclick="nav(&#39;registry&#39;)" id="nav-registry"><span class="si">🛏️</span> Patient Registry</div>
+    <div class="sb-item" onclick="nav(&#39;overview&#39;)" id="nav-overview"><span class="si">📊</span> Live Overview</div>
+    <div class="sb-item" onclick="nav(&#39;alerts&#39;)" id="nav-alerts"><span class="si">🚨</span> Alerts <span class="sb-badge" id="alertBadge" style="display:none">0</span></div>
+    <div class="sb-sec">Administration</div>
+    <div class="sb-item" onclick="nav(&#39;wards&#39;)" id="nav-wards"><span class="si">🏢</span> Ward Management</div>
+    <div class="sb-item" onclick="nav(&#39;devices&#39;)" id="nav-devices"><span class="si">📡</span> Devices</div>
+    <div class="sb-sec">AI Tools</div>
+    <div class="sb-item" onclick="nav(&#39;ai&#39;)" id="nav-ai"><span class="si">🤖</span> AI Assistant</div>
+    <div class="sb-item" onclick="nav(&#39;health&#39;)" id="nav-health"><span class="si">🩺</span> Health Analysis</div>
+    <div class="sb-sec">Settings</div>
+    <div class="sb-item" onclick="nav(&#39;config&#39;)" id="nav-config"><span class="si">⚙️</span> Configuration</div>
+  </div>
+  <div class="sb-bottom">
+    <div class="session-bar">
+      <div class="session-bar-dot"></div>
+      <div class="session-bar-email" id="sessionEmail">NURSE001</div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+    <div class="sb-user">
+      <div class="sb-av">HM</div>
+      <div>
+        <div class="sb-uname" id="sbUserName">Head Nurse</div>
+        <div class="sb-urole" id="sbUserRole">Ward Nurse</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="main" style="visibility: hidden;">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">Patient Registry</div>
+      <div class="topbar-sub" id="topbarSub">Assign patients to IV monitoring devices</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" id="topbarRefreshBtn" onclick="refreshAllStatus()">🔄 Refresh Status</button>
+      <button class="btn btn-primary" id="topbarActionBtn" onclick="openAddModal()">+ Assign Patient</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page active" id="page-registry">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">🛏️</div><div class="stat-val" id="sTotal">0</div><div class="stat-lbl">Total Patients</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val c-ok" id="sOk">0</div><div class="stat-lbl">OK (&gt;50%)</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val c-warn" id="sWarn">0</div><div class="stat-lbl">Low (20–50%)</div></div>
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-val c-crit" id="sCrit">0</div><div class="stat-lbl">Critical (&lt;20%)</div></div>
+      </div>
+      <div class="sec-hdr">
+        <div><div class="sec-title">Assigned Patients</div><div class="sec-sub">Click a patient name to open their live IV monitor</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Patient Name</th><th>Ward</th><th>Room/Bed</th><th>Device ID</th><th>Bag Cap</th><th>Fluid Status</th><th>Last Saved</th><th>Actions</th></tr></thead>
+          <tbody id="regTbody"><tr><td colspan="8"><div class="empty"><div class="empty-icon">🛏️</div><div class="empty-text">No patients assigned yet</div><div class="empty-sub">Click "+ Assign Patient"</div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-overview">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">🛏️</div><div class="stat-val" id="ovTotal">0</div><div class="stat-lbl">Total Patients</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val c-ok" id="ovOk">0</div><div class="stat-lbl">OK</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val c-warn" id="ovWarn">0</div><div class="stat-lbl">Low</div></div>
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-val c-crit" id="ovCrit">0</div><div class="stat-lbl">Critical</div></div>
+      </div>
+      <div class="sec-hdr">
+        <div><div class="sec-title">Live Patient Overview</div><div class="sec-sub">Click any card to open the full live monitor for that patient</div></div>
+        <select class="sort-sel" id="ovSort" onchange="renderOverview()">
+          <option value="name">Sort: Name</option>
+          <option value="ward">Sort: Ward</option>
+          <option value="pct-asc">Sort: Critical First</option>
+          <option value="pct-desc">Sort: Highest First</option>
+        </select>
+      </div>
+      <div class="overview-grid" id="overviewGrid"></div>
+    </div>
+
+    <div class="page" id="page-alerts">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">🚨</div><div class="stat-val c-crit" id="alCrit">0</div><div class="stat-lbl">Critical (&lt;20%)</div></div>
+        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val c-warn" id="alWarn">0</div><div class="stat-lbl">Low (20–50%)</div></div>
+        <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-val c-purple" id="alOffline">0</div><div class="stat-lbl">No Recent Data</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val c-ok" id="alOk">0</div><div class="stat-lbl">All Clear</div></div>
+      </div>
+      <div class="sec-hdr">
+        <div><div class="sec-title">Active Alerts</div><div class="sec-sub">Click a patient name to open their live monitor</div></div>
+        <select class="sort-sel" id="alSort" onchange="renderAlerts()">
+          <option value="severity">Sort: Severity (Critical First)</option>
+          <option value="ward">Sort: Ward</option>
+          <option value="pct-asc">Sort: Lowest Fluid First</option>
+          <option value="name">Sort: Name A–Z</option>
+        </select>
+      </div>
+      <div id="alertsList"></div>
+    </div>
+
+    <div class="page" id="page-wards">
+      <div class="sec-hdr">
+        <div><div class="sec-title">Ward Management</div><div class="sec-sub">Click a ward to expand · Click patient name to open live monitor</div></div>
+        <select class="sort-sel" id="wardPatSort" onchange="renderWards()">
+          <option value="bed">Sort Patients: Bed No</option>
+          <option value="severity">Sort Patients: Critical First</option>
+          <option value="name">Sort Patients: Name</option>
+        </select>
+      </div>
+      <div id="wardsList"></div>
+    </div>
+
+    <div class="page" id="page-devices">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon">📡</div><div class="stat-val" id="dvTotal">0</div><div class="stat-lbl">Total Devices</div></div>
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val c-ok" id="dvOnline">0</div><div class="stat-lbl">Online</div></div>
+        <div class="stat-card"><div class="stat-icon">⚪</div><div class="stat-val" id="dvIdle">0</div><div class="stat-lbl">No Patient</div></div>
+        <div class="stat-card"><div class="stat-icon">🏥</div><div class="stat-val c-purple" id="dvWards">0</div><div class="stat-lbl">Wards Covered</div></div>
+      </div>
+      <div class="sec-hdr">
+        <div><div class="sec-title">Device Registry</div><div class="sec-sub">All ESP32 devices with Firebase Realtime Database credentials</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Device</button>
+      </div>
+      <div class="device-grid" id="deviceGrid"></div>
+    </div>
+
+    <div class="page" id="page-config">
+
+      <div id="fbSetupBanner" style="display:none;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:13px;padding:18px 20px;margin-bottom:20px;">
+        <div style="font-size:.88rem;font-weight:700;margin-bottom:6px;color:#9a3412;">🔥 Connect Firebase for Shared Data</div>
+        <div style="font-size:.75rem;color:#c2410c;margin-bottom:14px;line-height:1.6;">Without Firebase, each browser has its own separate data. Add your Firebase config below so your whole team sees the same patients in real-time.<br><strong>Free setup: </strong><a href="https://console.firebase.google.com/" target="_blank" style="color:#c2410c;">console.firebase.google.com</a> → New Project → Firestore Database → Web App</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="fg"><label>API Key *</label><input id="fbApiKey" class="fmono" type="text" placeholder="AIzaSy…"></div>
+          <div class="fg"><label>Auth Domain *</label><input id="fbAuthDomain" class="fmono" type="text" placeholder="your-app.firebaseapp.com"></div>
+          <div class="fg"><label>Project ID *</label><input id="fbProjectId" class="fmono" type="text" placeholder="your-project-id"></div>
+          <div class="fg"><label>Storage Bucket</label><input id="fbStorageBucket" class="fmono" type="text" placeholder="your-app.appspot.com"></div>
+          <div class="fg"><label>Messaging Sender ID</label><input id="fbSenderId" class="fmono" type="text" placeholder="123456789"></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId" class="fmono" type="text" placeholder="1:123…:web:abc…"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveFirebaseConfig()">🔥 Connect Firebase</button>
+        <div style="font-size:.7rem;color:#9a3412;margin-top:8px;">⚠️ Make sure Firestore rules allow read/write — for a team app set rules to <code style="background:rgba(154,52,18,.1);padding:1px 5px;border-radius:3px;">allow read, write: if true;</code></div>
+      </div>
+
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">🔥 Firebase Configuration (Shared Data)</div>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">Connect Firebase Firestore so all team members share the same patient data in real-time.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="fg"><label>API Key</label><input id="fbApiKey2" class="fmono" type="text" placeholder="AIzaSy…"></div>
+          <div class="fg"><label>Auth Domain</label><input id="fbAuthDomain2" class="fmono" type="text" placeholder="your-app.firebaseapp.com"></div>
+          <div class="fg"><label>Project ID</label><input id="fbProjectId2" class="fmono" type="text" placeholder="your-project-id"></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId2" class="fmono" type="text" placeholder="1:123…:web:abc…"></div>
+        </div>
+        <button class="btn btn-primary" onclick="saveFirebaseConfig2()">🔥 Save &amp; Connect</button>
+        <span id="fbStatus" style="font-size:.75rem;color:var(--green);margin-left:12px;"></span>
+      </div>
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">⚙️ Global Configuration</div>
+        <div class="frow c2">
+          <div class="fg"><label>Firebase Realtime DB URL</label><input class="fmono" id="cfgRtdbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com"><div class="hint">Pre-filled for all device reads. Found in Firebase Console → Realtime Database.</div></div>
+          <div class="fg"><label>Admin Name</label><input id="cfgAdminName" type="text" placeholder="e.g. Head Nurse Priya"></div>
+        </div>
+        <div class="frow c2">
+          <div class="fg"><label>Hospital Name</label><input id="cfgHospital" type="text" placeholder="e.g. City General Hospital"></div>
+          <div class="fg"><label>Auto-Refresh Interval</label>
+            <select id="cfgRefresh">
+              <option value="30000">30 seconds</option>
+              <option value="60000" selected="">1 minute</option>
+              <option value="120000">2 minutes</option>
+              <option value="300000">5 minutes</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveConfig()">💾 Save Configuration</button>
+      </div>
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">🤖 AI Assistant Settings (Groq — Free)</div>
+        <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:9px;padding:10px 14px;font-size:.74rem;color:#065f46;margin-bottom:12px;">
+          ✅ <strong>100% Free — No billing needed!</strong> Sign up at <a href="https://console.groq.com/" target="_blank" style="color:#065f46;font-weight:700;">console.groq.com</a> → API Keys → Create Key. Paste the key below (starts with <code style="background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-family:monospace;">gsk_...</code>).
+        </div>
+        <div class="frow c2">
+          <div class="fg">
+            <label>Groq API Key *</label>
+            <input class="fmono" id="cfgGroqKey" type="password" placeholder="gsk_…">
+            <div class="hint">Free forever. Stored locally in your browser only.</div>
+          </div>
+          <div class="fg">
+            <label>AI Model</label>
+            <select id="cfgGroqModel">
+              <option value="llama-3.3-70b-versatile" selected="">llama-3.3-70b-versatile — Best for medical ⭐</option>
+              <option value="llama-4-maverick-17b-128e-instruct">llama-4-maverick — Fast + smart</option>
+              <option value="llama-4-scout-17b-16e-instruct">llama-4-scout — Ultra fast</option>
+              <option value="llama3-8b-8192">llama3-8b — Lightweight</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveGroqConfig()">🤖 Save AI Settings</button>
+        <span id="groqStatus" style="font-size:.75rem;color:var(--green);margin-left:12px;"></span>
+      </div>
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">🗑️ Data Management</div>
+        <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">All patient data is stored locally in your browser.</p>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-outline" onclick="exportData()">📥 Export JSON</button>
+          <button class="btn btn-red" onclick="clearAllData()">🗑️ Clear All Data</button>
+        </div>
+      </div>
+      <div class="cfg-panel">
+        <div class="cfg-panel-title">📋 Firebase Realtime Database Path Reference</div>
+        <div class="table-wrap" style="margin-bottom:0;">
+          <table><thead><tr><th>Path</th><th>Data</th><th>Written By</th><th>Read By</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/weight</span></td><td>Weight (kg)</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/percentage</span></td><td>Bag % remaining</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/ts</span></td><td>Timestamp (ms)</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/readings/{pushKey}</span></td><td>History entries</td><td>ESP32</td><td>Detail page chart</td></tr>
+            <tr><td><span class="badge b-ok">patients/{chId}</span></td><td>Patient metadata</td><td>Dashboard</td><td>All pages</td></tr>
+            <tr><td><span class="badge b-ok">ai_health_analysis/{id}</span></td><td>AI health reports</td><td>Dashboard</td><td>Health page</td></tr>
+            <tr><td><span class="badge b-ok">ai_shift_reports/{id}</span></td><td>Shift reports</td><td>Dashboard</td><td>AI page</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-detail">
+      <div class="det-wrap">
+
+        <div class="det-topbar">
+          <div class="det-patient-pill">
+            <div class="det-back" onclick="closeDetail()">← Back</div>
+            <div class="det-avatar">🧑‍⚕️</div>
+            <div>
+              <div class="det-pname" id="detName">—</div>
+              <div class="det-pmeta">
+                <span>🏥 <span id="detWard">—</span></span>
+                <span>🛏️ <span id="detBed">—</span></span>
+                <span>🆔 <span id="detMrn">—</span></span>
+                <span>💉 <span id="detCap">—</span> mL bag</span>
+                <span id="detNotesSpan"></span>
+              </div>
+            </div>
+          </div>
+          <div class="det-right">
+            <div class="dpill"><div class="ddot off" id="dStatusDot"></div><span id="dStatusTxt">Connecting…</span></div>
+          </div>
+        </div>
+
+        <div class="det-alert" id="detAlert"></div>
+
+        <div class="det-hero">
+          <div class="dhc">
+            <div class="dhc-lbl">💧 Volume Remaining</div>
+            <div class="dhc-val dc-cyan" id="dRemaining">—<span class="dhc-unit">mL</span></div>
+            <div class="dhc-sub" id="dRemainingTs">Waiting for data…</div>
+          </div>
+          <div class="dhc g">
+            <div class="dhc-lbl">✅ Volume Infused</div>
+            <div class="dhc-val dc-green" id="dInfused">—<span class="dhc-unit">mL</span></div>
+            <div class="dhc-sub" id="dInfusedPct">— % completed</div>
+          </div>
+          <div class="dhc a">
+            <div class="dhc-lbl">⏱ Infusion Rate</div>
+            <div class="dhc-val dc-amber" id="dRate">—<span class="dhc-unit">mL/hr</span></div>
+            <div class="dhc-sub" id="dETA">ETA: —</div>
+          </div>
+        </div>
+
+        <div class="det-prog">
+          <div class="dprog-hdr">
+            <div class="dprog-title">🩺 Infusion Progress</div>
+            <div class="dprog-pct" id="dProgPct">—%</div>
+          </div>
+          <div class="dprog-track"><div class="dprog-fill" id="dProgFill" style="width:0%"></div></div>
+          <div class="dprog-lbls"><span>0 mL</span><span id="dProgMid">—</span><span id="dProgMax">— mL</span></div>
+        </div>
+
+        <div class="det-stats">
+          <div class="dstat"><div class="dstat-lbl">Current Weight</div><div class="dstat-val dc-cyan" id="dWeight">—<span class="dstat-unit">kg</span></div></div>
+          <div class="dstat"><div class="dstat-lbl">Avg Rate</div><div class="dstat-val dc-amber" id="dAvgRate">—<span class="dstat-unit">mL/hr</span></div></div>
+          <div class="dstat"><div class="dstat-lbl">Min Remaining</div><div class="dstat-val" style="color:#ff4d6d" id="dMin">—<span class="dstat-unit">mL</span></div></div>
+          <div class="dstat"><div class="dstat-lbl">Max Remaining</div><div class="dstat-val" style="color:#10e898" id="dMax">—<span class="dstat-unit">mL</span></div></div>
+          <div class="dstat"><div class="dstat-lbl">Data Points</div><div class="dstat-val dc-cyan" id="dCount">—</div></div>
+        </div>
+
+        <div class="det-chart">
+          <div class="dcard-hdr">
+            <div class="dcard-title">📈 Volume Remaining Over Time</div>
+            <div class="dloading" id="dChartLoad"><div class="dspinner"></div>Loading…</div>
+          </div>
+          <div class="dchart-wrap"><canvas id="dChart"></canvas></div>
+        </div>
+
+        <div class="det-table-card">
+          <div class="dcard-hdr"><div class="dcard-title">🗃 Readings Log</div></div>
+          <table class="det-tbl">
+            <thead><tr><th>#</th><th>Timestamp</th><th>Weight (kg)</th><th>Remaining (mL)</th><th>Infused (mL)</th><th>Status</th></tr></thead>
+            <tbody id="dTBody"><tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Loading data from Firebase…</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+    <div class="page" id="page-ai">
+
+      <div class="ai-key-warn" id="aiKeyWarn">
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v3.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+      </div>
+
+      <div class="ai-layout">
+
+        <div class="ai-chat-panel">
+          <div class="ai-chat-hdr">
+            <div class="ai-chat-hdr-icon">🤖</div>
+            <div>
+              <div class="ai-chat-title">AI Hospital Assistant</div>
+              <div class="ai-chat-sub">Powered by Groq · llama-3.3-70b · Ask anything about your patients</div>
+            </div>
+            <span class="ai-model-badge" id="aiModelBadge">llama-3.3-70b ✅ Free</span>
+          </div>
+          <div class="ai-messages" id="aiMessages">
+            <div class="ai-msg bot">
+              <div class="ai-msg-avatar">🤖</div>
+              <div>
+                <div class="ai-msg-bubble">
+                  Hello! I'm your AI hospital assistant powered by Groq (llama-3.3-70b). I can help you with:<br><br>
+                  • <strong>Patient summaries</strong> — Ask me about current patient stats<br>
+                  • <strong>Clinical Q&amp;A</strong> — IV fluid protocols, infusion rates, etc.<br>
+                  • <strong>Report drafting</strong> — Generate shift handover notes<br>
+                  • <strong>General queries</strong> — Ask me anything hospital-related<br><br>
+                  How can I help you today?
+                </div>
+                <div class="ai-msg-time">Just now</div>
+              </div>
+            </div>
+            <div class="ai-typing" id="aiTyping">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="ai-input-row">
+            <textarea id="aiChatInput" placeholder="Ask about patients, IV protocols, generate reports…" rows="1" onkeydown="if(event.key===&#39;Enter&#39;&amp;&amp;!event.shiftKey){event.preventDefault();sendAiChat();}"></textarea>
+            <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiChat()">➤</button>
+          </div>
+        </div>
+
+        <div class="ai-right-panel">
+
+          <div class="ai-tool-card">
+            <div class="ai-tool-hdr">
+              <span class="ai-tool-icon">📋</span>
+              <div class="ai-tool-title">Summarize Patient Data</div>
+            </div>
+            <div class="ai-tool-body">
+              <p>Instantly generate a clinical summary of all current patients, their IV fluid status, and critical alerts.</p>
+              <button class="btn btn-primary btn-sm" onclick="aiSummarizePatients()" id="btnSummarize">
+                📋 Generate Summary
+              </button>
+              <button class="btn btn-outline btn-sm" onclick="aiSendSummaryToChat()" id="btnSumToChat" style="display:none;">
+                💬 Send to Chat
+              </button>
+              <div class="ai-output" id="summaryOutput"></div>
+            </div>
+          </div>
+
+          <div class="ai-tool-card">
+            <div class="ai-tool-hdr">
+              <span class="ai-tool-icon">📝</span>
+              <div class="ai-tool-title">Generate Shift Report</div>
+            </div>
+            <div class="ai-tool-body">
+              <p>Create a professional shift handover report based on current patient and alert data.</p>
+              <div class="fg" style="margin-bottom:10px;">
+                <label>Shift Type</label>
+                <select id="aiShiftType">
+                  <option value="morning">Morning Shift (06:00–14:00)</option>
+                  <option value="afternoon">Afternoon Shift (14:00–22:00)</option>
+                  <option value="night">Night Shift (22:00–06:00)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="aiGenerateShiftReport()" id="btnShiftReport">
+                📝 Generate Report
+              </button>
+              <div class="ai-output" id="shiftReportOutput"></div>
+            </div>
+          </div>
+
+          <div class="ai-tool-card">
+            <div class="ai-tool-hdr">
+              <span class="ai-tool-icon">✍️</span>
+              <div class="ai-tool-title">Content Generator</div>
+            </div>
+            <div class="ai-tool-body">
+              <p>Generate custom clinical content — patient instructions, protocol reminders, notes, and more.</p>
+              <div class="fg" style="margin-bottom:10px;">
+                <label>What to generate</label>
+                <select id="aiContentType">
+                  <option value="iv_protocol">IV Fluid Protocol Reminder</option>
+                  <option value="patient_instructions">Patient IV Instructions</option>
+                  <option value="alert_memo">Critical Alert Memo</option>
+                  <option value="ward_notice">Ward Notice / Announcement</option>
+                  <option value="custom">Custom (describe in chat)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="aiGenerateContent()" id="btnGenContent">
+                ✍️ Generate
+              </button>
+              <div class="ai-output" id="contentOutput"></div>
+            </div>
+          </div>
+
+          <div class="ai-tool-card">
+            <div class="ai-tool-hdr">
+              <span class="ai-tool-icon">🗂️</span>
+              <div class="ai-tool-title">Saved Shift Reports</div>
+            </div>
+            <div class="ai-tool-body">
+              <p>Past shift reports saved to Firebase. Click any to view the full report.</p>
+              <button class="btn btn-outline btn-sm" onclick="loadShiftReportRecords()" style="margin-bottom:10px;">🔄 Load Records</button>
+              <div id="shiftReportRecordsList" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;display:none;"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="page-health">
+
+      <div class="ai-key-warn" id="healthKeyWarn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 13px;font-size:.73rem;color:#b45309;margin-bottom:14px;">
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v3.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+      </div>
+
+      <div class="sec-hdr" style="margin-bottom:16px;">
+        <div>
+          <div class="sec-title">🩺 Patient Vital Signs &amp; AI Health Analysis</div>
+          <div class="sec-sub">Enter Heart Rate, SpO₂ and Temperature for each patient — AI will analyse possible diseases and health risks</div>
+        </div>
+        <div class="sec-controls">
+          <button class="btn btn-primary" onclick="runHealthAnalysis()" id="btnRunAnalysis">
+            🧠 Analyse All Patients
+          </button>
+          <button class="btn btn-outline" onclick="clearVitals()">🗑 Clear Vitals</button>
+        </div>
+      </div>
+
+      <div class="vitals-grid" id="vitalsGrid">
+        <div class="empty"><div class="empty-icon">🩺</div><div class="empty-text">No patients yet</div><div class="empty-sub">Assign patients in the Patient Registry first</div></div>
+      </div>
+
+      <div class="ai-analysis-panel">
+        <div class="aap-hdr">
+          <div class="aap-icon">🧠</div>
+          <div>
+            <div class="aap-title">AI Health Risk Analysis</div>
+            <div class="aap-sub">Powered by Groq · llama-3.3-70b-versatile · Results are indicative only, not a clinical diagnosis</div>
+          </div>
+          <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="copyAnalysisReport()" id="btnCopyReport">📋 Copy Report</button>
+        </div>
+        <div class="aap-loading" id="aapLoading">
+          <div class="aap-spinner"></div>
+          Analysing vital signs with AI…
+        </div>
+        <div class="aap-body" id="aapBody">
+          <div class="aap-empty">👆 Enter vital signs above and click <strong>Analyse All Patients</strong> to see AI health risk analysis</div>
+        </div>
+      </div>
+
+      <div class="records-panel">
+        <div class="records-hdr">
+          <div class="records-hdr-left">
+            <div class="records-hdr-icon">🗂️</div>
+            <div>
+              <div class="records-title">Saved Analysis Records</div>
+              <div class="records-sub">Last 20 AI health analyses stored in Firebase · click any to view full report</div>
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadAnalysisRecords()">🔄 Refresh</button>
+        </div>
+        <div class="records-list" id="analysisRecordsList">
+          <div class="record-empty">🔥 Connect Firebase to store and view past analyses</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="record-detail-overlay" id="recordDetailOverlay">
+      <div class="record-detail-modal">
+        <div class="rdm-hdr">
+          <div>
+            <div class="rdm-title" id="rdmTitle">Report</div>
+            <div class="rdm-meta" id="rdmMeta"></div>
+          </div>
+          <div class="rdm-x" onclick="closeRecordDetail()">✕</div>
+        </div>
+        <div class="rdm-body" id="rdmBody"></div>
+        <div class="rdm-foot">
+          <button class="btn btn-outline btn-sm" onclick="copyRecordText()">📋 Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="closeRecordDetail()">Close</button>
+        </div>
+      </div>
+    </div>
+  <div class="overlay" id="patientModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div><div class="modal-title" id="modalTitle">Assign Patient to Device</div>
+        <div class="modal-sub">Patient info saved to Firebase Firestore · device reads from Realtime DB</div></div>
+      <div class="modal-x" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="info-box">
+        <strong>🔥 Firebase Realtime DB Path</strong>
+        Device data is read from <code>devices/{Device ID}/latest</code> and <code>devices/{Device ID}/readings</code><br>
+        The Device ID must exactly match what your ESP32 uses in its code.
+      </div>
+      <div class="frow c2">
+        <div class="fg"><label>Patient Full Name *</label><input id="fName" type="text" placeholder="e.g. Ravi Kumar"></div>
+        <div class="fg"><label>Patient ID / MRN</label><input id="fMrn" type="text" placeholder="e.g. MRN-20045"></div>
+      </div>
+      <div class="frow c3">
+        <div class="fg"><label>Ward *</label><input id="fWard" type="text" placeholder="e.g. ICU"></div>
+        <div class="fg"><label>Room / Bed No *</label><input id="fBed" type="text" placeholder="e.g. B-12"></div>
+        <div class="fg"><label>Bag Capacity (mL) *</label>
+          <input id="fCap" type="number" placeholder="e.g. 500" value="500"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Device ID *</label><input id="fChId" class="fmono" type="text" placeholder="e.g. ESP32-A1 or device_001">
+          <div class="hint">Must match the DEVICE_ID defined in your ESP32 sketch</div></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label>Doctor / Notes</label><input id="fNotes" type="text" placeholder="e.g. Dr. Priya Sharma — Post-op day 2"></div>
+      </div>
+      <div class="push-status" id="pushStatus"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="pushBtn" onclick="pushPatient()">💾 Save Patient</button>
+    </div>
+  </div>
+  </div><div class="toast" id="toast"></div>
+
+<script src="./hospimanage 3_files/chart.umd.min.js.download"></script>
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase, ref, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ═══════════════════════════════════════════════════════════════
+// NURSE ACCOUNTS — Add / edit nurses here
+// Format: 'NURSE_ID': { password, name, role }
+// ═══════════════════════════════════════════════════════════════
+const NURSE_ACCOUNTS = {
+  'NURSE001': { password: 'Ward1@2024',  name: 'Nurse One',    role: 'Ward Nurse'  },
+  'NURSE002': { password: 'Ward2@2024',  name: 'Nurse Two',    role: 'Ward Nurse'  },
+  'NURSE003': { password: 'ICU3@2024',   name: 'Nurse Three',  role: 'ICU Nurse'   },
+  'ADMIN001': { password: 'Admin@2024',  name: 'Ward Admin',   role: 'Ward Admin'  },
+};
+
+// ═══════════════════════════════════════════════════════════════
+// FIREBASE CONFIG (Firestore only — no Auth)
+// ═══════════════════════════════════════════════════════════════
+const HARDCODED_CONFIG = {
+  apiKey: "AIzaSyDixq5gmWhy2QVSKwlDwraBNvu1yY-cCrM",
+  authDomain: "hospital-dashboard-d5d1b.firebaseapp.com",
+  projectId: "hospital-dashboard-d5d1b",
+  storageBucket: "hospital-dashboard-d5d1b.firebasestorage.app",
+  messagingSenderId: "202596574387",
+  appId: "1:202596574387:web:e2da34eaccc3ff93f8bcc6",
+  databaseURL: "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app",
+};
+const FIREBASE_CONFIG = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null') || HARDCODED_CONFIG;
+
+let db   = null;
+let rtdb = null; // Firebase Realtime Database instance
+let unsubscribe = null;
+window.rtdbListeners = {}; // Track active RTDB listeners — on window so regular script can access
+
+function initFirebase(config) {
+  try {
+    const app = getApps().length ? getApp() : initializeApp(config);
+    db   = getFirestore(app);
+    rtdb = getDatabase(app);
+    document.getElementById('fbSetupBanner').style.display = 'none';
+    // Expose rtdb instance so live listener can use it
+    window._rtdb = rtdb;
+    window._rtdbRef = ref;
+    window._rtdbOnValue = onValue;
+    window._rtdbOff = off;
+    return true;
+  } catch(e) {
+    console.error('Firebase init error:', e);
+    return false;
+  }
+}
+
+function listenToPatients() {
+  if (unsubscribe) unsubscribe();
+  unsubscribe = onSnapshot(collection(db, 'patients'), (snapshot) => {
+    patients = snapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
+    renderRegistry(); renderOverview(); renderAlerts(); renderWards(); renderDevices(); updateGlobalStats();
+    if (patients.length) {
+      refreshAllStatus();
+      // Start real-time RTDB listeners for live IV level updates
+      setTimeout(() => {
+        if (window.startAllLiveListeners) window.startAllLiveListeners();
+      }, 1000);
+    }
+  });
+}
+
+window.fbSave = async function(patient) {
+  if (!db) { localSave(); return; }
+  const id = patient.chId || ('p_' + Date.now());
+  await setDoc(doc(db, 'patients', id), patient);
+};
+
+window.fbDelete = async function(chId) {
+  if (!db) { localSave(); return; }
+  await deleteDoc(doc(db, 'patients', chId));
+};
+
+window.fbSaveAnalysis = async function(analysisText, patientCount, vitalsSnapshot) {
+  if (!db) { showToast('⚠️ Firebase not connected — analysis not saved', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'ai_health_analysis'), {
+      text: analysisText, patientCount, vitals: vitalsSnapshot,
+      createdAt: Timestamp.now(),
+      createdBy: localStorage.getItem('hm_logged_nurse') || 'Nurse',
+    });
+    showToast('🔥 Analysis saved to Firebase', 'success');
+  } catch(e) { showToast('❌ Save failed: ' + e.message, 'error'); }
+};
+
+window.fbSaveShiftReport = async function(reportText, shiftType) {
+  if (!db) { showToast('⚠️ Firebase not connected — report not saved', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'ai_shift_reports'), {
+      text: reportText, shiftType,
+      createdAt: Timestamp.now(),
+      createdBy: localStorage.getItem('hm_logged_nurse') || 'Nurse',
+      date: new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+    });
+    showToast('🔥 Shift report saved to Firebase', 'success');
+  } catch(e) { showToast('❌ Save failed: ' + e.message, 'error'); }
+};
+
+window.fbLoadRecords = async function(collectionName, limitCount = 20) {
+  if (!db) return [];
+  try {
+    const q = query(collection(db, collectionName), orderBy('createdAt', 'desc'), limit(limitCount));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { return []; }
+};
+
+window.saveFirebaseConfig = function() {
+  const cfg = {
+    apiKey:            document.getElementById('fbApiKey').value.trim(),
+    authDomain:        document.getElementById('fbAuthDomain').value.trim(),
+    projectId:         document.getElementById('fbProjectId').value.trim(),
+    storageBucket:     document.getElementById('fbStorageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fbSenderId').value.trim(),
+    appId:             document.getElementById('fbAppId').value.trim(),
+  };
+  if (!cfg.apiKey || !cfg.projectId) { showToast('⚠️ Enter at least API Key and Project ID', 'error'); return; }
+  localStorage.setItem('hm_firebase_config', JSON.stringify(cfg));
+  initFirebase(cfg);
+};
+
+window._firebaseReady = () => !!db;
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL CONFIG SYNC — Saves Groq key + settings to Firestore
+// so ALL devices/PCs share the same configuration automatically
+// ═══════════════════════════════════════════════════════════════
+window.fbSaveGlobalConfig = async function(data) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, 'app_config', 'global'), data, { merge: true });
+  } catch(e) { console.error('fbSaveGlobalConfig error:', e); }
+};
+
+window.fbLoadGlobalConfig = async function() {
+  if (!db) return null;
+  try {
+    const snap = await getDoc(doc(db, 'app_config', 'global'));
+    return snap.exists() ? snap.data() : null;
+  } catch(e) { console.error('fbLoadGlobalConfig error:', e); return null; }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// AUTH — Nurse ID + Password (no Firebase Auth needed)
+// ═══════════════════════════════════════════════════════════════
+
+const SESSION_KEY  = 'hm_session';
+const INACT_MS     = 8 * 60 * 60 * 1000; // 8 hours
+let   _inactTimer  = null;
+
+function startInactivityTimer() {
+  clearTimeout(_inactTimer);
+  _inactTimer = setTimeout(() => { doLogout(true); }, INACT_MS);
+}
+['click','keydown','mousemove','touchstart'].forEach(evt => {
+  document.addEventListener(evt, () => {
+    if (localStorage.getItem(SESSION_KEY)) startInactivityTimer();
+  }, { passive: true });
+});
+
+function showDashboard(nurse) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.querySelector('.sidebar').style.visibility  = 'visible';
+  document.querySelector('.main').style.visibility     = 'visible';
+  // Update sidebar with nurse info
+  const emailEl = document.getElementById('sessionEmail');
+  const nameEl  = document.getElementById('sbUserName');
+  const roleEl  = document.getElementById('sbUserRole');
+  if (emailEl) emailEl.textContent = nurse.id;
+  if (nameEl)  nameEl.textContent  = nurse.name;
+  if (roleEl)  roleEl.textContent  = nurse.role;
+  localStorage.setItem('hm_logged_nurse', nurse.name);
+  startInactivityTimer();
+  listenToPatients();
+  // ── Load shared config (Groq key, RTDB URL, etc.) from Firebase
+  //    so the settings are the same on every device/PC automatically
+  setTimeout(async () => {
+    if (window.applyGlobalConfigFromFirebase) {
+      await window.applyGlobalConfigFromFirebase();
+    }
+  }, 800); // small delay so Firestore db is ready
+  if (typeof showToast === 'function') showToast('✅ Welcome, ' + nurse.name + '!', 'success');
+}
+
+function showLoginScreen() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.querySelector('.sidebar').style.visibility  = 'hidden';
+  document.querySelector('.main').style.visibility     = 'hidden';
+  clearTimeout(_inactTimer);
+}
+
+// Check if already logged in from previous session
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(SESSION_KEY);
+  if (saved) {
+    try {
+      const nurse = JSON.parse(saved);
+      // Verify the nurse ID still exists in accounts
+      if (NURSE_ACCOUNTS[nurse.id]) {
+        showDashboard(nurse);
+        initFirebase(FIREBASE_CONFIG);
+        return;
+      }
+    } catch(e) {}
+    localStorage.removeItem(SESSION_KEY);
+  }
+  showLoginScreen();
+  initFirebase(FIREBASE_CONFIG);
+});
+
+window.doLogin = function() {
+  const nurseId = document.getElementById('loginEmail').value.trim().toUpperCase();
+  const pass    = document.getElementById('loginPass').value;
+  const errEl   = document.getElementById('loginError');
+  const btn     = document.getElementById('loginBtn');
+  const btnText = document.getElementById('loginBtnText');
+  const spinner = document.getElementById('loginSpinner');
+
+  errEl.classList.remove('show');
+
+  if (!nurseId || !pass) {
+    errEl.textContent = '⚠️ Please enter your Nurse ID and password.';
+    errEl.classList.add('show'); return;
+  }
+
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'Signing in…';
+
+  // Small delay so spinner shows (feels more like a real login)
+  setTimeout(() => {
+    const account = NURSE_ACCOUNTS[nurseId];
+    if (!account) {
+      errEl.textContent = '❌ Nurse ID not found. Check your ID and try again.';
+      errEl.classList.add('show');
+    } else if (account.password !== pass) {
+      errEl.textContent = '❌ Incorrect password. Please try again.';
+      errEl.classList.add('show');
+    } else {
+      // ✅ Login success
+      const nurse = { id: nurseId, name: account.name, role: account.role };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(nurse));
+      document.getElementById('loginPass').value  = '';
+      showDashboard(nurse);
+    }
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '🔐 Sign In';
+  }, 400);
+};
+
+window.doLogout = function(auto = false) {
+  if (!auto && !confirm('Sign out of IV FluidWatch?')) return;
+  localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem('hm_logged_nurse');
+  if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+  clearTimeout(_inactTimer);
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPass').value  = '';
+  showLoginScreen();
+  if (typeof showToast === 'function') showToast(auto ? '⏱ Session expired — signed out' : '👋 Signed out successfully', auto ? 'error' : 'success');
+};
+
+// Keep these stubs so any leftover references don't crash
+window.showLockScreen = showLoginScreen;
+window.hideLockScreen = (u) => showDashboard({ id: u, name: u, role: '' });
+window.resetInactivityTimer = startInactivityTimer;
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// SHOW / HIDE PASSWORD
+// ═══════════════════════════════════════════════════════════════
+function togglePassword() {
+  const input = document.getElementById('loginPass');
+  const btn   = document.getElementById('pwToggleBtn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = 'Hide Password';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+    btn.title = 'Show Password';
+  }
+}
+window.togglePassword = togglePassword;
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE FIREBASE RTDB LISTENER
+// Attaches a real-time listener to a patient's RTDB latest node
+// so the registry/overview update INSTANTLY when ESP32 pushes data
+// ═══════════════════════════════════════════════════════════════
+function startLiveListener(patient) {
+  if (!window._rtdb || !patient.chId) return;
+  const chId    = patient.chId;
+  const cap     = parseFloat(patient.cap) || 1000;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url') || '';
+  if (!rtdbUrl) return;
+
+  // Stop existing listener for this device if any
+  stopLiveListener(chId);
+
+  const path    = `devices/${chId}/latest`;
+  const dbRef   = window._rtdbRef(window._rtdb, path);
+
+  const listener = window._rtdbOnValue(dbRef, (snapshot) => {
+    const d = snapshot.val();
+    if (!d || d.weight == null) return;
+
+    const weightKg   = parseFloat(d.weight) || 0;
+    const DEN        = 1.006;
+    const remaining  = Math.min(Math.max(0, (weightKg - 0.055) * 1000 / DEN), cap);
+    const pct        = Math.min(100, Math.max(0, (remaining / cap) * 100));
+    const ts         = d.ts ? new Date(d.ts) : new Date();
+    const stale      = (Date.now() - ts.getTime()) > 10 * 60 * 1000;
+
+    // Update liveData immediately
+    liveData[chId] = { pct, remaining, rate: 0, ts, stale };
+    updateGlobalStats();
+    updateRegistryRow(chId);
+
+    // Re-render active page
+    const activePage = document.querySelector('.page.active')?.id?.replace('page-', '');
+    if (activePage === 'overview') renderOverview();
+    if (activePage === 'alerts')   renderAlerts();
+    if (activePage === 'wards')    renderWards();
+  });
+
+  window.rtdbListeners[chId] = { ref: dbRef, listener };
+}
+
+function stopLiveListener(chId) {
+  if (window.rtdbListeners[chId]) {
+    window._rtdbOff(window.rtdbListeners[chId].ref);
+    delete window.rtdbListeners[chId];
+  }
+}
+
+function startAllLiveListeners() {
+  patients.forEach(p => startLiveListener(p));
+}
+
+window.startLiveListener    = startLiveListener;
+window.stopLiveListener     = stopLiveListener;
+window.startAllLiveListeners = startAllLiveListeners;
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+let patients         = JSON.parse(localStorage.getItem('hm_patients') || '[]');
+let liveData         = {};
+let editIdx          = -1;
+let autoRefreshTimer = null;
+let prevPage         = 'registry';
+
+// ─── Patient Detail state ────────────────────────────────────
+let detPatient      = null;
+let detChartInst    = null;
+let detRtdbListener = null;   // Active RTDB onValue listener
+let detReadings     = [];     // Rolling buffer of last 30 readings
+let detPrevVal      = null;   // Previous remaining value for rate calculation
+let detPrevTs       = null;   // Previous timestamp for rate calculation
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL CONFIG SYNC — Apply Firebase config to this device
+// Called on every login so all PCs stay in sync automatically
+// ═══════════════════════════════════════════════════════════════
+window.applyGlobalConfigFromFirebase = async function() {
+  if (!window.fbLoadGlobalConfig) return;
+  const cfg = await window.fbLoadGlobalConfig();
+  if (!cfg) return;
+
+  let changed = false;
+
+  // ── Apply Global Configuration fields ──
+  if (cfg.rtdbUrl   !== undefined) { localStorage.setItem('hm_rtdb_url',   cfg.rtdbUrl);   changed = true; }
+  if (cfg.adminName !== undefined) { localStorage.setItem('hm_admin_name', cfg.adminName); changed = true; }
+  if (cfg.hospital  !== undefined) { localStorage.setItem('hm_hospital',   cfg.hospital);  changed = true; }
+  if (cfg.refresh   !== undefined) { localStorage.setItem('hm_refresh',    cfg.refresh);   changed = true; }
+
+  // ── Apply Groq AI settings ──
+  if (cfg.groqKey   !== undefined) { localStorage.setItem('hm_groq_key',   cfg.groqKey);   changed = true; }
+  if (cfg.groqModel !== undefined) { localStorage.setItem('hm_groq_model', cfg.groqModel); changed = true; }
+
+  if (!changed) return;
+
+  // ── Refresh the Config page UI fields ──
+  loadConfig();
+  const kEl = document.getElementById('cfgGroqKey');
+  const mEl = document.getElementById('cfgGroqModel');
+  if (kEl && cfg.groqKey)   kEl.value = cfg.groqKey;
+  if (mEl && cfg.groqModel) mEl.value = cfg.groqModel;
+  updateAiKeyWarning();
+  startAutoRefresh();
+
+  showToast('🔄 Settings synced from Firebase', 'success');
+};
+
+// ═══════════════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+const PAGE_META = {
+  registry:{ title:'Patient Registry',      sub:'Click a patient name to open their live IV monitor',         showRefresh:true,  btn:'+ Assign Patient', btnFn:'openAddModal' },
+  overview:{ title:'Live Overview',          sub:'Click any card to open the full live monitor for that patient', showRefresh:true,  btn:'🔄 Refresh Now',   btnFn:'refreshAllStatus' },
+  alerts:  { title:'Alerts',                sub:'Patients requiring attention · click name to open monitor',   showRefresh:true,  btn:'🔄 Refresh Now',   btnFn:'refreshAllStatus' },
+  wards:   { title:'Ward Management',       sub:'Expand a ward · click patient name to open live monitor',     showRefresh:true,  btn:'+ Assign Patient', btnFn:'openAddModal' },
+  devices: { title:'Devices',               sub:'All ESP32 devices with Firebase Realtime Database credentials',  showRefresh:false, btn:'+ Add Device',     btnFn:'openAddModal' },
+  config:  { title:'Configuration',         sub:'Global settings and data management',                            showRefresh:false, btn:null,               btnFn:null },
+  detail:  { title:'Patient Live Monitor',  sub:'Real-time IV fluid data from Firebase',                          showRefresh:false, btn:'← Back',           btnFn:'closeDetail' },
+  ai:      { title:'AI Assistant',          sub:'Groq-powered assistant for patient summaries and reports',     showRefresh:false, btn:null,               btnFn:null },
+  health:  { title:'Health Analysis',       sub:'Enter vital signs — AI analyses possible diseases and health risks', showRefresh:false, btn:'🧠 Analyse All', btnFn:'runHealthAnalysis' },
+};
+
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(document.getElementById('nav-'+page))
+    document.getElementById('nav-'+page).classList.add('active');
+  const m = PAGE_META[page];
+  document.getElementById('topbarTitle').textContent = m.title;
+  document.getElementById('topbarSub').textContent   = m.sub;
+  document.getElementById('topbarRefreshBtn').style.display = m.showRefresh ? 'inline-flex':'none';
+  const ab = document.getElementById('topbarActionBtn');
+  if(m.btn){ ab.style.display='inline-flex'; ab.textContent=m.btn; ab.onclick=window[m.btnFn]; }
+  else { ab.style.display='none'; }
+  if(page==='overview') renderOverview();
+  if(page==='alerts')   renderAlerts();
+  if(page==='wards')    renderWards();
+  if(page==='devices')  renderDevices();
+  if(page==='registry') renderRegistry();
+  if(page==='ai')       renderAiPage();
+  if(page==='health')   renderHealthPage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// OPEN / CLOSE PATIENT DETAIL
+// ═══════════════════════════════════════════════════════════════
+function openDetail(patientIdx){
+  const active = document.querySelector('.page.active');
+  prevPage = active ? active.id.replace('page-','') : 'registry';
+
+  detPatient = patients[patientIdx];
+  if(!detPatient) return;
+
+  // Fill header info
+  document.getElementById('detName').textContent  = detPatient.name || '—';
+  document.getElementById('detWard').textContent  = detPatient.ward || '—';
+  document.getElementById('detBed').textContent   = detPatient.bed  || '—';
+  document.getElementById('detMrn').textContent   = detPatient.mrn  || 'No MRN';
+  document.getElementById('detCap').textContent   = detPatient.cap  || '1000';
+  const notesEl = document.getElementById('detNotesSpan');
+  notesEl.textContent = detPatient.notes ? '📋 '+detPatient.notes : '';
+
+  // Reset UI
+  document.getElementById('detAlert').style.display = 'none';
+  document.getElementById('dStatusDot').className   = 'ddot off';
+  document.getElementById('dStatusTxt').textContent = 'Connecting…';
+  document.getElementById('dChartLoad').style.display = 'none';
+  document.getElementById('dTBody').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Waiting for live data…</td></tr>';
+  ['dRemaining','dInfused','dRate','dProgPct','dWeight','dAvgRate','dMin','dMax','dCount'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.innerHTML='—';
+  });
+  document.getElementById('dProgFill').style.width='0%';
+  document.getElementById('dProgMid').textContent='—';
+  document.getElementById('dETA').textContent='ETA: —';
+  document.getElementById('dRemainingTs').textContent='Waiting for live data…';
+  document.getElementById('dInfusedPct').textContent='— % completed';
+  document.getElementById('dProgMax').textContent='— mL';
+
+  // Reset readings buffer and rate state
+  detReadings = [];
+  detPrevVal  = null;
+  detPrevTs   = null;
+
+  nav('detail');
+
+  // Load history first (for chart and table), then start live listener
+  detLoadHistory();
+  detStartLiveListener();
+}
+
+function closeDetail(){
+  detStopLiveListener();
+  if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
+  detReadings = [];
+  nav(prevPage);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DETAIL PAGE — REAL-TIME FIREBASE RTDB LISTENER
+// ═══════════════════════════════════════════════════════════════
+const DEN = 1.006;
+function kgToMl(kg){ return Math.max(0, (kg - 0.055)*1000/DEN); }
+function fmtH(h){ return h<1 ? Math.round(h*60)+' min' : h.toFixed(1)+' hr'; }
+
+// Smooth animated number counter
+function animateValue(elementId, newVal, decimals, suffix) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const current = parseFloat(el.dataset.rawVal) || 0;
+  const start   = current;
+  const end     = newVal;
+  const duration = 800; // ms
+  const startTime = performance.now();
+
+  function update(now) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value  = start + (end - start) * eased;
+    el.dataset.rawVal = value;
+    el.innerHTML = value.toFixed(decimals) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// Start real-time RTDB listener for the detail page
+function detStartLiveListener() {
+  detStopLiveListener();
+  if (!window._rtdb || !detPatient?.chId) {
+    // Fallback to REST polling if RTDB not ready
+    detFetchDataRest();
+    return;
+  }
+  const path  = `devices/${detPatient.chId}/latest`;
+  const dbRef = window._rtdbRef(window._rtdb, path);
+
+  detRtdbListener = window._rtdbOnValue(dbRef, (snapshot) => {
+    const d = snapshot.val();
+    if (!d || d.weight == null) {
+      detShowAlert('No data yet. Ensure ESP32 is running and connected.');
+      detSetStatus(false);
+      return;
+    }
+    detHideAlert();
+    detSetStatus(true);
+
+    const cap      = parseFloat(detPatient.cap) || 1000;
+    const weightKg = parseFloat(d.weight) || 0;
+    const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
+    const nowTs    = Date.now(); // Use arrival time as real timestamp
+
+    // Add to rolling readings buffer (max 30 points)
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining });
+    if (detReadings.length > 30) detReadings.shift();
+
+    detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
+  }, (error) => {
+    detShowAlert('Firebase error: ' + error.message);
+    detSetStatus(false);
+  });
+}
+
+function detStopLiveListener() {
+  if (detRtdbListener && window._rtdbOff) {
+    try { window._rtdbOff(detRtdbListener); } catch(e) {}
+    detRtdbListener = null;
+  }
+}
+
+// Update all live display elements with smooth animation
+function detUpdateLiveDisplay(remaining, weightKg, cap, nowTs) {
+  const infused = Math.max(0, cap - remaining);
+  const pct     = ((infused / cap) * 100);
+  const pctStr  = pct.toFixed(1);
+
+  // ── Calculate rolling infusion rate (mL/hr) from last 3 readings ──
+  let rate = 0;
+  if (detReadings.length >= 2) {
+    // Use up to last 5 readings for a rolling average rate
+    const window5 = detReadings.slice(-5);
+    const first   = window5[0];
+    const last    = window5[window5.length - 1];
+    const dh      = (last.time - first.time) / 3600000; // hours
+    if (dh > 0.0001) { // at least ~0.36 seconds apart
+      rate = Math.max(0, (first.remaining - last.remaining) / dh);
+    }
+  }
+
+  const eta = rate > 0 ? (remaining / rate) : null;
+
+  // ── Smooth animated value updates ──
+  animateValue('dRemaining', remaining, 1, '<span class="dhc-unit">mL</span>');
+  animateValue('dInfused',   infused,   1, '<span class="dhc-unit">mL</span>');
+  animateValue('dWeight',    weightKg,  4, '<span class="dstat-unit">kg</span>');
+  animateValue('dAvgRate',   rate,      1, '<span class="dstat-unit">mL/hr</span>');
+
+  // Rate display (hero card)
+  document.getElementById('dRate').innerHTML = rate.toFixed(1) + '<span class="dhc-unit">mL/hr</span>';
+  document.getElementById('dETA').textContent = 'ETA: ' + (eta != null ? fmtH(eta) : '—');
+
+  // Timestamp (real time, not ESP32 boot time)
+  document.getElementById('dRemainingTs').textContent = 'Updated: ' + new Date(nowTs).toLocaleString();
+  document.getElementById('dInfusedPct').textContent  = pctStr + '% completed';
+
+  // Progress bar (CSS transition handles smooth movement)
+  const fill = document.getElementById('dProgFill');
+  fill.style.width    = pctStr + '%';
+  fill.className      = 'dprog-fill' + (remaining < cap * 0.2 ? ' warn' : '');
+  document.getElementById('dProgPct').textContent  = pctStr + '%';
+  document.getElementById('dProgMid').textContent  = (cap / 2).toFixed(0) + ' mL';
+  document.getElementById('dProgMax').textContent  = cap + ' mL';
+
+  // Min / Max from rolling buffer
+  const rVals = detReadings.map(r => r.remaining);
+  const minR  = Math.min(...rVals);
+  const maxR  = Math.max(...rVals);
+  document.getElementById('dMin').innerHTML   = minR.toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dMax').innerHTML   = maxR.toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dCount').textContent = detReadings.length;
+
+  // Pulse animation on hero cards when new data arrives
+  document.querySelectorAll('.dhc').forEach(el => {
+    el.classList.remove('live-pulse');
+    void el.offsetWidth; // force reflow
+    el.classList.add('live-pulse');
+  });
+
+  // Update liveData for other pages
+  liveData[detPatient.chId] = { pct, remaining, rate, ts: new Date(nowTs), stale: false };
+  updateGlobalStats();
+  updateRegistryRow(detPatient.chId);
+
+  // Update chart and table with rolling buffer
+  detRenderChart(detReadings, cap);
+  detRenderTable(detReadings, cap);
+}
+
+// Load history readings from RTDB (for chart on first open)
+async function detLoadHistory() {
+  if (!detPatient?.chId) return;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url') || '';
+  if (!rtdbUrl) return;
+
+  document.getElementById('dChartLoad').style.display = 'flex';
+  try {
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(detPatient.chId)}/readings.json?orderBy="ts"&limitToLast=30`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const raw = await res.json();
+    if (!raw) return;
+
+    const cap = parseFloat(detPatient.cap) || 1000;
+    const history = Object.values(raw)
+      .filter(f => f.weight != null && !isNaN(parseFloat(f.weight)))
+      .map(f => ({
+        time: new Date(Date.now() - (Date.now() - parseInt(f.ts || 0))), // best-effort time
+        weightKg: parseFloat(f.weight),
+        remaining: Math.min(Math.max(0, kgToMl(parseFloat(f.weight))), cap)
+      }))
+      .sort((a, b) => a.time - b.time);
+
+    if (history.length) {
+      detReadings = history;
+      detRenderChart(detReadings, cap);
+      detRenderTable(detReadings, cap);
+      document.getElementById('dCount').textContent = detReadings.length;
+    }
+  } catch(e) {
+    // History load failed — live data will populate the chart
+  } finally {
+    document.getElementById('dChartLoad').style.display = 'none';
+  }
+}
+
+// Fallback REST polling (used only if RTDB SDK not available)
+async function detFetchDataRest(){
+  if(!detPatient) return;
+  const ch = detPatient.chId;
+  const cap = parseFloat(detPatient.cap) || 1000;
+  if(!ch){ detShowAlert('No Device ID configured.'); return; }
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url')||'';
+  if(!rtdbUrl){ detShowAlert('Firebase Realtime DB URL not set. Go to Configuration.'); return; }
+  try{
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(ch)}/latest.json`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const d = await res.json();
+    if(!d||d.weight==null) throw new Error('No data from ESP32 yet.');
+    const weightKg  = parseFloat(d.weight)||0;
+    const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
+    const nowTs     = Date.now();
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining });
+    if (detReadings.length > 30) detReadings.shift();
+    detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
+    detSetStatus(true);
+    detHideAlert();
+  }catch(err){
+    detShowAlert('Error: '+err.message);
+    detSetStatus(false);
+  }
+}
+
+function detRenderChart(entries, cap){
+  if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
+  const ctx = document.getElementById('dChart').getContext('2d');
+  const labels = entries.map(e=>e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  const g1=ctx.createLinearGradient(0,0,0,220);g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
+  const g2=ctx.createLinearGradient(0,0,0,220);g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+  detChartInst = new Chart(ctx,{
+    type:'line',
+    data:{labels, datasets:[
+      {label:'Remaining (mL)',data:entries.map(e=>e.remaining.toFixed(2)),borderColor:'#00d4ff',backgroundColor:g1,borderWidth:2,pointRadius:entries.length>30?0:3,fill:true,tension:0.4,yAxisID:'y'},
+      {label:'Infused (mL)',  data:entries.map(e=>e.infused.toFixed(2)),  borderColor:'#10e898',backgroundColor:g2,borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{labels:{color:'#4a6a80',font:{family:'JetBrains Mono',size:11}}},
+        tooltip:{backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,titleColor:'#4a6a80',bodyColor:'#dff0ff',
+          titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:12},
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}}
+      },
+      scales:{
+        x:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'#0e1c28'}},
+        y:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},callback:v=>v+' mL'},grid:{color:'#0e1c28'},max:cap}
+      },animation:{duration:600}
+    }
+  });
+}
+
+function detRenderTable(entries, cap){
+  const rows=[...entries].reverse().map((e,i)=>{
+    const pct=((e.infused/cap)*100).toFixed(1);
+    let cls,lbl;
+    if(e.remaining>cap*0.5){lbl='OK';cls='db-ok';}
+    else if(e.remaining>cap*0.2){lbl='LOW';cls='db-low';}
+    else{lbl='CRITICAL';cls='db-crit';}
+    return `<tr>
+      <td style="color:#4a6a80">${i+1}</td>
+      <td>${e.time.toLocaleString()}</td>
+      <td style="color:#4a6a80">${e.weightKg.toFixed(4)}</td>
+      <td style="color:#00d4ff;font-weight:600">${e.remaining.toFixed(1)}</td>
+      <td style="color:#10e898">${e.infused.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
+      <td><span class="${cls}">${lbl}</span></td>
+    </tr>`;
+  });
+  document.getElementById('dTBody').innerHTML = rows.join('');
+}
+
+function detShowAlert(m){ const e=document.getElementById('detAlert'); e.textContent='⚠ '+m; e.style.display='block'; }
+function detHideAlert(){ document.getElementById('detAlert').style.display='none'; }
+function detSetStatus(on){
+  document.getElementById('dStatusDot').className='ddot'+(on?'':' off');
+  document.getElementById('dStatusTxt').textContent=on?'Live':'Offline';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STORAGE HELPERS
+// ═══════════════════════════════════════════════════════════════
+function localSave(){ localStorage.setItem('hm_patients',JSON.stringify(patients)); }
+function save(){ localSave(); /* Firestore save is done per-patient in pushPatient/removePatient */ }
+
+function saveFirebaseConfig2(){
+  // Sync values from config page inputs to banner inputs so saveFirebaseConfig() works
+  document.getElementById('fbApiKey').value     = document.getElementById('fbApiKey2').value.trim();
+  document.getElementById('fbAuthDomain').value = document.getElementById('fbAuthDomain2').value.trim();
+  document.getElementById('fbProjectId').value  = document.getElementById('fbProjectId2').value.trim();
+  document.getElementById('fbStorageBucket').value = '';
+  document.getElementById('fbSenderId').value   = '';
+  document.getElementById('fbAppId').value      = document.getElementById('fbAppId2').value.trim();
+  window.saveFirebaseConfig();
+  document.getElementById('fbStatus').textContent = '✅ Connected!';
+}
+
+function loadFirebaseConfigUI(){
+  const cfg = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null');
+  if(!cfg) return;
+  document.getElementById('fbApiKey2').value     = cfg.apiKey     || '';
+  document.getElementById('fbAuthDomain2').value = cfg.authDomain || '';
+  document.getElementById('fbProjectId2').value  = cfg.projectId  || '';
+  document.getElementById('fbAppId2').value      = cfg.appId      || '';
+  document.getElementById('fbStatus').textContent = cfg.projectId ? '✅ Connected' : '';
+}
+
+function loadConfig() {
+  document.getElementById('cfgRtdbUrl').value  = localStorage.getItem('hm_rtdb_url')    ||'';
+  document.getElementById('cfgAdminName').value = localStorage.getItem('hm_admin_name') ||'Head Nurse';
+  document.getElementById('cfgHospital').value  = localStorage.getItem('hm_hospital')   ||'';
+  document.getElementById('cfgRefresh').value   = localStorage.getItem('hm_refresh')    ||'60000';
+  document.getElementById('sbUserName').textContent = localStorage.getItem('hm_admin_name')||'Head Nurse';
+}
+
+function saveConfig(){
+  const rtdbUrl   = document.getElementById('cfgRtdbUrl').value.trim();
+  const adminName = document.getElementById('cfgAdminName').value.trim();
+  const hospital  = document.getElementById('cfgHospital').value.trim();
+  const refresh   = document.getElementById('cfgRefresh').value;
+
+  localStorage.setItem('hm_rtdb_url',   rtdbUrl);
+  localStorage.setItem('hm_admin_name', adminName);
+  localStorage.setItem('hm_hospital',   hospital);
+  localStorage.setItem('hm_refresh',    refresh);
+  document.getElementById('sbUserName').textContent = adminName||'Head Nurse';
+  startAutoRefresh();
+
+  // ── Sync to Firebase Firestore so ALL devices share this config ──
+  if (window.fbSaveGlobalConfig) {
+    window.fbSaveGlobalConfig({ rtdbUrl, adminName, hospital, refresh })
+      .then(()  => showToast('✅ Configuration saved & synced to all devices','success'))
+      .catch(()  => showToast('✅ Configuration saved (locally only)','success'));
+  } else {
+    showToast('✅ Configuration saved','success');
+  }
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({patients,liveData},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ivfluidwatch_patients_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+
+function clearAllData(){
+  if(!confirm('Clear ALL patient data? This cannot be undone.')) return;
+  if(window._firebaseReady && window._firebaseReady()){
+    Promise.all(patients.map(p=>window.fbDelete(p.chId||p._id))).then(()=>{
+      patients=[];liveData={};
+      renderRegistry();renderOverview();renderAlerts();renderWards();renderDevices();updateGlobalStats();
+      showToast('All data cleared','success');
+    });
+  } else {
+    patients=[];liveData={};save();
+    renderRegistry();renderOverview();renderAlerts();renderWards();renderDevices();updateGlobalStats();
+    showToast('All data cleared','success');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════
+function openAddModal(){
+  editIdx=-1;
+  document.getElementById('modalTitle').textContent='Assign Patient to Device';
+  ['fName','fMrn','fWard','fBed','fChId','fNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fCap').value='500';
+  document.getElementById('pushStatus').style.display='none';
+  document.getElementById('patientModal').classList.add('show');
+}
+
+function openEditModal(idx){
+  editIdx=idx; const p=patients[idx];
+  document.getElementById('modalTitle').textContent='Edit Patient Assignment';
+  document.getElementById('fName').value    =p.name    ||'';
+  document.getElementById('fMrn').value     =p.mrn     ||'';
+  document.getElementById('fWard').value    =p.ward    ||'';
+  document.getElementById('fBed').value     =p.bed     ||'';
+  document.getElementById('fChId').value    =p.chId    ||'';
+  document.getElementById('fCap').value     =p.cap     ||'500';
+  document.getElementById('fNotes').value   =p.notes   ||'';
+  document.getElementById('pushStatus').style.display='none';
+  document.getElementById('patientModal').classList.add('show');
+}
+
+function closeModal(){ document.getElementById('patientModal').classList.remove('show'); }
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE PATIENT (Firebase only — no ThingSpeak)
+// ═══════════════════════════════════════════════════════════════
+async function pushPatient(){
+  const name     = document.getElementById('fName').value.trim();
+  const mrn      = document.getElementById('fMrn').value.trim();
+  const ward     = document.getElementById('fWard').value.trim();
+  const bed      = document.getElementById('fBed').value.trim();
+  const chId     = document.getElementById('fChId').value.trim();
+  const cap      = document.getElementById('fCap').value;
+  const notes    = document.getElementById('fNotes').value.trim();
+  if(!name||!ward||!bed||!chId){
+    setPushStatus('⚠️ Fill all required fields (Name, Ward, Bed, Device ID)','warn'); return;
+  }
+  const btn=document.getElementById('pushBtn');
+  btn.textContent='⏳ Saving…'; btn.disabled=true;
+  setPushStatus('Saving to Firebase…','info');
+  try{
+    const p={name,mrn,ward,bed,chId,cap,notes,
+      pushedAt:new Date().toISOString(),status:'active'};
+    if(window._firebaseReady && window._firebaseReady()){
+      await window.fbSave(p);
+      // onSnapshot will re-render all pages
+    } else {
+      if(editIdx>=0) patients[editIdx]=p; else patients.push(p);
+      save(); updateGlobalStats(); renderRegistry();
+    }
+    setPushStatus(`✅ Patient "${name}" saved to Firebase (Device: ${chId}).`,'success');
+    showToast(`✅ "${name}" assigned to Device ${chId}`,'success');
+    setTimeout(()=>{ closeModal(); fetchPatientLive(p); },2000);
+  }catch(e){ setPushStatus('❌ Save error: '+e.message,'error'); }
+  finally{ btn.textContent='💾 Save Patient'; btn.disabled=false; }
+}
+
+function setPushStatus(msg,type){
+  const el=document.getElementById('pushStatus');
+  el.style.display='block';
+  const c={success:'rgba(16,185,129,.1)|rgba(16,185,129,.3)|#065f46',
+           error:'rgba(239,68,68,.1)|rgba(239,68,68,.3)|#991b1b',
+           warn:'rgba(245,158,11,.1)|rgba(245,158,11,.3)|#92400e',
+           info:'rgba(14,165,233,.1)|rgba(14,165,233,.3)|#075985'}[type].split('|');
+  el.style.background=c[0];el.style.border=`1px solid ${c[1]}`;el.style.color=c[2];
+  el.textContent=msg;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE DATA FETCH (background, for overview/registry) — Firebase RTDB
+// ═══════════════════════════════════════════════════════════════
+async function fetchPatientLive(p){
+  if(!p.chId) return;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url')||'';
+  if(!rtdbUrl){ liveData[p.chId]={pct:null,remaining:null,rate:0,ts:null,stale:true}; return; }
+  try{
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(p.chId)}/latest.json`;
+    const res=await fetch(url); if(!res.ok) return;
+    const d=await res.json();
+    if(!d||d.weight==null) return;
+    const weightKg = parseFloat(d.weight)||0;
+    const cap      = parseFloat(p.cap)||500;
+    const DEN      = 1.006;
+    const remaining = Math.min(Math.max(0,(weightKg - 0.055)*1000/DEN), cap);
+    const pct       = Math.min(100, Math.max(0,(remaining/cap)*100));
+    const ts        = d.ts ? new Date(d.ts) : null;
+    const stale     = ts ? (Date.now()-ts.getTime())>10*60*1000 : true;
+    liveData[p.chId]={pct,remaining,rate:0,ts,stale};
+    updateGlobalStats();
+    const activePage=document.querySelector('.page.active')?.id?.replace('page-','');
+    if(activePage==='overview') renderOverview();
+    if(activePage==='alerts')   renderAlerts();
+    if(activePage==='wards')    renderWards();
+    updateRegistryRow(p.chId);
+  }catch(e){}
+}
+
+async function refreshAllStatus(){
+  showToast('🔄 Refreshing…','success');
+  await Promise.all(patients.map(p=>fetchPatientLive(p)));
+  showToast('✅ All updated','success');
+}
+
+function startAutoRefresh(){
+  clearInterval(autoRefreshTimer);
+  const iv=parseInt(localStorage.getItem('hm_refresh')||'60000');
+  autoRefreshTimer=setInterval(refreshAllStatus,iv);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATUS HELPERS
+// ═══════════════════════════════════════════════════════════════
+function getStatus(chId){
+  const d=liveData[chId];
+  if(!d) return 'idle';
+  if(d.stale) return 'offline';
+  if(d.pct<=20) return 'crit';
+  if(d.pct<=50) return 'warn';
+  return 'ok';
+}
+
+function statusBadge(chId){
+  const d=liveData[chId];const st=getStatus(chId);
+  if(st==='idle')    return `<span class="badge b-idle">⏳ Fetching…</span>`;
+  if(st==='offline') return `<span class="badge b-idle">📡 No Data</span>`;
+  const cls=st==='crit'?'b-crit':st==='warn'?'b-warn':'b-ok';
+  const ico=st==='crit'?'🚨':st==='warn'?'⚠️':'✅';
+  return `<span class="badge ${cls}">${ico} ${d.pct.toFixed(0)}% · ${d.remaining.toFixed(0)}mL</span>`;
+}
+
+function updateGlobalStats(){
+  const total=patients.length;
+  let ok=0,warn=0,crit=0,alerts=0;
+  patients.forEach(p=>{
+    const st=getStatus(p.chId);
+    if(st==='ok') ok++;
+    else if(st==='warn'){warn++;alerts++;}
+    else if(st==='crit'){crit++;alerts++;}
+  });
+  ['sTotal','ovTotal'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=total;});
+  ['sOk','ovOk'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=ok;});
+  ['sWarn','ovWarn'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=warn;});
+  ['sCrit','ovCrit','alCrit'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=crit;});
+  const alW=document.getElementById('alWarn');if(alW)alW.textContent=warn;
+  const alOk=document.getElementById('alOk');if(alOk)alOk.textContent=ok;
+  const alOff=document.getElementById('alOffline');
+  if(alOff)alOff.textContent=patients.filter(p=>getStatus(p.chId)==='offline').length;
+  const badge=document.getElementById('alertBadge');
+  if(alerts>0){badge.textContent=alerts;badge.style.display='inline';}
+  else{badge.style.display='none';}
+  const dvT=document.getElementById('dvTotal');if(dvT)dvT.textContent=total;
+  const dvOn=document.getElementById('dvOnline');
+  if(dvOn)dvOn.textContent=patients.filter(p=>!['offline','idle'].includes(getStatus(p.chId))).length;
+  const dvI=document.getElementById('dvIdle');if(dvI)dvI.textContent=patients.filter(p=>!p.name).length;
+  const wards=new Set(patients.map(p=>p.ward).filter(Boolean));
+  const dvW=document.getElementById('dvWards');if(dvW)dvW.textContent=wards.size;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE: REGISTRY
+// ═══════════════════════════════════════════════════════════════
+function renderRegistry(){
+  const tbody=document.getElementById('regTbody');
+  if(!patients.length){
+    tbody.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="empty-icon">🛏️</div><div class="empty-text">No patients assigned yet</div><div class="empty-sub">Click "+ Assign Patient"</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=patients.map((p,i)=>`
+    <tr>
+      <td><a class="td-link" onclick="openDetail(${i})">${p.name}</a>${p.mrn?`<div class="td-mono">${p.mrn}</div>`:''}</td>
+      <td>${p.ward}</td><td>${p.bed}</td>
+      <td><span class="td-mono">${p.chId}</span></td>
+      <td><span class="td-mono">${p.cap} mL</span></td>
+      <td class="status-cell-${p.chId}">${statusBadge(p.chId)}</td>
+      <td><div class="td-mono" style="font-size:.67rem">${p.pushedAt?new Date(p.pushedAt).toLocaleString():'—'}</div></td>
+      <td><div class="td-acts">
+        <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})">✏️</button>
+        <button class="btn btn-red btn-sm" onclick="removePatient(${i})">🗑</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function updateRegistryRow(chId){
+  document.querySelectorAll('.status-cell-'+chId).forEach(el=>{ el.innerHTML=statusBadge(chId); });
+}
+
+function removePatient(idx){
+  if(!confirm(`Remove "${patients[idx].name}"?`)) return;
+  const p = patients[idx];
+  if(window._firebaseReady && window._firebaseReady()){
+    window.fbDelete(p.chId || p._id);
+    // onSnapshot will re-render automatically
+  } else {
+    patients.splice(idx,1);save();renderRegistry();updateGlobalStats();
+  }
+  showToast('Patient removed','success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE: LIVE OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+function renderOverview(){
+  const grid=document.getElementById('overviewGrid');
+  if(!patients.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📊</div><div class="empty-text">No patients yet</div></div>`;return;
+  }
+  const sort=document.getElementById('ovSort')?.value||'name';
+  const sorted=[...patients].map((p,i)=>({...p,_idx:i})).sort((a,b)=>{
+    if(sort==='name') return a.name.localeCompare(b.name);
+    if(sort==='ward') return (a.ward||'').localeCompare(b.ward||'');
+    const pa=liveData[a.chId]?.pct??50,pb=liveData[b.chId]?.pct??50;
+    return sort==='pct-asc'?pa-pb:pb-pa;
+  });
+  grid.innerHTML=sorted.map(p=>{
+    const d=liveData[p.chId];const st=getStatus(p.chId);
+    const pct=d?.pct??null;
+    const fc=st==='crit'?'var(--red)':st==='warn'?'var(--amber)':'var(--green)';
+    const ts=d?.ts?new Date(d.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'—';
+    return `<div class="ov-card ${st}" onclick="openDetail(${p._idx})">
+      <div class="ov-hdr"><div><div class="ov-name">${p.name}</div><div class="ov-meta">${p.ward} · ${p.bed}</div></div>${statusBadge(p.chId)}</div>
+      <div class="ov-gauge"><div class="ov-gauge-fill" style="width:${pct??0}%;background:${fc}"></div></div>
+      <div class="ov-stats">
+        <div class="ov-stat"><div class="ov-stat-lbl">Remaining</div><div class="ov-stat-val">${d?d.remaining.toFixed(0)+'mL':'—'}</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Infused</div><div class="ov-stat-val">${d?(parseFloat(p.cap)-d.remaining).toFixed(0)+'mL':'—'}</div></div>
+        <div class="ov-stat"><div class="ov-stat-lbl">Rate</div><div class="ov-stat-val">${d?d.rate.toFixed(0)+'mL/h':'—'}</div></div>
+      </div>
+      <div class="ov-footer"><span class="ov-ts">${p.notes||p.mrn||'—'} · ${ts}</span><span class="ov-view">Open Monitor →</span></div>
+    </div>`;
+  }).join('');
+  updateGlobalStats();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE: ALERTS
+// ═══════════════════════════════════════════════════════════════
+function renderAlerts(){
+  const container=document.getElementById('alertsList');
+  const sort=document.getElementById('alSort')?.value||'severity';
+  const sevOrd={crit:0,warn:1,offline:2,ok:3,idle:4};
+  const sorted=[...patients].map((p,i)=>({...p,_idx:i})).sort((a,b)=>{
+    if(sort==='ward') return (a.ward||'').localeCompare(b.ward||'');
+    if(sort==='name') return a.name.localeCompare(b.name);
+    const sa=sevOrd[getStatus(a.chId)],sb=sevOrd[getStatus(b.chId)];
+    if(sa!==sb) return sa-sb;
+    const pa=liveData[a.chId]?.pct??100,pb=liveData[b.chId]?.pct??100;
+    return pa-pb;
+  });
+  const alertPats=sorted.filter(p=>['crit','warn','offline'].includes(getStatus(p.chId)));
+  updateGlobalStats();
+  if(!alertPats.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">All Clear</div><div class="empty-sub">No patients require attention</div></div>`;return;
+  }
+  container.innerHTML=alertPats.map(p=>{
+    const d=liveData[p.chId];const st=getStatus(p.chId);
+    const pct=d?.pct??null;
+    const eta=d?.rate>0?(d.remaining/d.rate):null;
+    const etaStr=eta!=null?(eta<1?Math.round(eta*60)+' min':eta.toFixed(1)+' hr'):'—';
+    const ts=d?.ts?new Date(d.ts).toLocaleString():'No data';
+    const reasons=[];
+    if(st==='crit') reasons.push(`🚨 CRITICAL: Only ${pct?.toFixed(0)}% remaining (${d?.remaining?.toFixed(0)} mL)`);
+    if(st==='warn') reasons.push(`⚠️ LOW: ${pct?.toFixed(0)}% remaining — prepare replacement`);
+    if(st==='offline') reasons.push(`📡 No data received — device may be offline`);
+    if(d?.rate>0&&eta!=null&&eta<0.5) reasons.push(`⏱️ ETA to empty: ${etaStr} — urgent!`);
+    return `<div class="alert-card ${st==='crit'?'crit':'warn'}">
+      <div class="alert-icon ${st==='crit'?'crit':'warn'}">${st==='crit'?'🚨':st==='offline'?'📡':'⚠️'}</div>
+      <div class="alert-info">
+        <div class="alert-name"><a class="td-link" onclick="openDetail(${p._idx})">${p.name}</a> ${p.mrn?`<span class="td-mono">${p.mrn}</span>`:''}</div>
+        <div class="alert-detail">${p.ward} · ${p.bed} · Ch.${p.chId}<br/>${reasons.join('<br/>')}${p.notes?`<br/>📋 ${p.notes}`:''}</div>
+      </div>
+      <div class="alert-right">
+        <div class="alert-pct ${st==='crit'?'crit':'warn'}">${pct!=null?pct.toFixed(0)+'%':'—'}</div>
+        <span class="badge ${st==='crit'?'b-crit':'b-warn'}">${st.toUpperCase()}</span>
+        <div class="alert-time">Last: ${ts}</div>
+        ${eta!=null?`<div class="alert-time">ETA: ${etaStr}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE: WARD MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+function renderWards(){
+  const container=document.getElementById('wardsList');
+  if(!patients.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">No wards yet</div></div>`;return;
+  }
+  const patSort=document.getElementById('wardPatSort')?.value||'bed';
+  const wardMap={};
+  patients.forEach((p,i)=>{ const w=p.ward||'Unassigned'; if(!wardMap[w])wardMap[w]=[]; wardMap[w].push({...p,_idx:i}); });
+  container.innerHTML=Object.keys(wardMap).sort().map(ward=>{
+    const wp=[...wardMap[ward]].sort((a,b)=>{
+      if(patSort==='bed') return (a.bed||'').localeCompare(b.bed||'');
+      if(patSort==='name') return a.name.localeCompare(b.name);
+      const so={crit:0,warn:1,offline:2,ok:3,idle:4};
+      return (so[getStatus(a.chId)]||4)-(so[getStatus(b.chId)]||4);
+    });
+    const crits=wp.filter(p=>getStatus(p.chId)==='crit').length;
+    const warns=wp.filter(p=>getStatus(p.chId)==='warn').length;
+    const wid='ward-'+ward.replace(/\W+/g,'-');
+    const rows=wp.map(p=>{
+      const d=liveData[p.chId];const st=getStatus(p.chId);
+      const pct=d?.pct??null;
+      const bc=st==='crit'?'var(--red)':st==='warn'?'var(--amber)':'var(--green)';
+      const eta=d?.rate>0?(d.remaining/d.rate):null;
+      const etaStr=eta!=null?(eta<1?Math.round(eta*60)+' min':eta.toFixed(1)+' hr'):'—';
+      return `<tr>
+        <td><a class="td-link" onclick="openDetail(${p._idx})">${p.name}</a>${p.mrn?`<div class="td-mono">${p.mrn}</div>`:''}</td>
+        <td>${p.bed}</td>
+        <td><div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;">
+            <div style="width:${pct??0}%;height:100%;background:${bc};border-radius:999px;transition:width .6s;"></div>
+          </div>
+          <span style="font-size:.75rem;font-family:'JetBrains Mono',monospace;width:36px;text-align:right;">${pct!=null?pct.toFixed(0)+'%':'—'}</span>
+        </div></td>
+        <td>${d?d.remaining.toFixed(0)+' mL':'—'}</td>
+        <td>${d?d.rate.toFixed(0)+' mL/h':'—'}</td>
+        <td>${etaStr}</td>
+        <td>${statusBadge(p.chId)}</td>
+        <td><span class="td-mono" style="font-size:.7rem;">${p.chId}</span></td>
+        <td>${p.notes||'—'}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="openEditModal(${patients.indexOf(patients.find(x=>x.chId===p.chId))})">✏️</button></td>
+      </tr>`;
+    }).join('');
+    return `<div class="ward-block">
+      <div class="ward-hdr" onclick="toggleWard('${wid}')">
+        <div class="ward-icon">🏥</div>
+        <div><div class="ward-name">${ward}</div><div class="ward-meta">${wp.length} patient${wp.length!==1?'s':''}</div></div>
+        <div class="ward-stats">
+          ${crits>0?`<div class="ws"><span class="ws-val c-crit">${crits}</span><span class="ws-lbl">Critical</span></div>`:''}
+          ${warns>0?`<div class="ws"><span class="ws-val c-warn">${warns}</span><span class="ws-lbl">Low</span></div>`:''}
+          <div class="ws"><span class="ws-val c-ok">${wp.length-crits-warns}</span><span class="ws-lbl">OK</span></div>
+        </div>
+        <div class="ward-arrow">▼</div>
+      </div>
+      <div class="ward-body" id="${wid}">
+        <div class="table-wrap" style="border-radius:0;border:none;margin-bottom:0;">
+          <table>
+            <thead><tr><th>Patient</th><th>Bed</th><th>Fluid Level</th><th>Remaining</th><th>Rate</th><th>ETA Empty</th><th>Status</th><th>Channel</th><th>Notes</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleWard(id){
+  const body=document.getElementById(id);
+  const hdr=body.previousElementSibling;
+  const open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  hdr.classList.toggle('open',!open);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PAGE: DEVICES
+// ═══════════════════════════════════════════════════════════════
+function renderDevices(){
+  const grid=document.getElementById('deviceGrid');
+  if(!patients.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">📡</div><div class="empty-text">No devices yet</div></div>`;return;
+  }
+  const masked=k=>k?k.slice(0,4)+'••••••••••'+k.slice(-4):'—';
+  grid.innerHTML=patients.map((p,i)=>{
+    const st=getStatus(p.chId);const d=liveData[p.chId];
+    const online=!['idle','offline'].includes(st);
+    return `<div class="device-card">
+      <div class="device-hdr">
+        <div><div class="device-id">Channel ${p.chId}</div><div class="device-room">${p.ward||'—'} · ${p.bed||'—'}</div></div>
+        <div class="device-status ${online?'':'offline'}" title="${online?'Online':'Offline'}"></div>
+      </div>
+      <div class="device-row">
+        <div class="device-field"><label>Patient</label>
+          <div class="dk"><a class="td-link" onclick="openDetail(${i})">${p.name||'Unassigned'}</a></div></div>
+        <div class="device-field"><label>Channel ID</label>
+          <div class="dk"><span>${p.chId}</span><span class="dk-copy" onclick="copyText('${p.chId}','Channel ID')">Copy</span></div></div>
+        <div class="device-field"><label>Write API Key</label>
+          <div class="dk"><span class="fmono" style="font-size:.7rem;">${masked(p.writeKey)}</span><span class="dk-copy" onclick="copyText('${p.writeKey}','Write Key')">Copy</span></div></div>
+        <div class="device-field"><label>Read API Key</label>
+          <div class="dk"><span class="fmono" style="font-size:.7rem;">${p.readKey?masked(p.readKey):'Public channel'}</span>${p.readKey?`<span class="dk-copy" onclick="copyText('${p.readKey}','Read Key')">Copy</span>`:''}</div></div>
+      </div>
+      <div class="device-footer">
+        <span class="td-mono" style="font-size:.68rem;">${d?.ts?'Last: '+new Date(d.ts).toLocaleTimeString():'Not fetched'}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="openEditModal(${i})">✏️</button>
+          <button class="btn btn-red btn-sm" onclick="removePatient(${i})">🗑</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateGlobalStats();
+}
+
+function copyText(text,label){
+  navigator.clipboard.writeText(text)
+    .then(()=>showToast(`✅ ${label} copied`,'success'))
+    .catch(()=>{ const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast(`✅ ${label} copied`,'success'); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+type;
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+function getGroqKey(){   return localStorage.getItem('hm_groq_key')||''; }
+function getGroqModel(){ return localStorage.getItem('hm_groq_model')||'llama-3.3-70b-versatile'; }
+
+function saveGroqConfig(){
+  const key   = document.getElementById('cfgGroqKey').value.trim();
+  const model = document.getElementById('cfgGroqModel').value;
+  if(!key){ showToast('⚠️ Enter your Groq API Key (gsk_...)','error'); return; }
+  if(!key.startsWith('gsk_')){ showToast('⚠️ Groq keys start with gsk_','error'); return; }
+  localStorage.setItem('hm_groq_key', key);
+  localStorage.setItem('hm_groq_model', model);
+  document.getElementById('groqStatus').textContent = '✅ Saved!';
+  setTimeout(()=>{ document.getElementById('groqStatus').textContent=''; }, 3000);
+  updateAiKeyWarning();
+
+  // ── Sync to Firebase Firestore so ALL devices share the same Groq key ──
+  if (window.fbSaveGlobalConfig) {
+    window.fbSaveGlobalConfig({ groqKey: key, groqModel: model })
+      .then(()  => showToast('🤖 AI settings saved & synced to all devices!','success'))
+      .catch(()  => showToast('🤖 AI settings saved (locally only).','success'));
+  } else {
+    showToast('🤖 AI settings saved! Ready to use.','success');
+  }
+}
+
+function updateAiKeyWarning(){
+  const warn  = document.getElementById('aiKeyWarn');
+  const hwarn = document.getElementById('healthKeyWarn');
+  const hasKey = !!getGroqKey();
+  if(warn)  warn.classList.toggle('show', !hasKey);
+  if(hwarn) hwarn.style.display = hasKey ? 'none' : 'block';
+}
+
+function renderAiPage(){
+  updateAiKeyWarning();
+  const k = getGroqKey(); const m = getGroqModel();
+  const kEl = document.getElementById('cfgGroqKey');
+  const mEl = document.getElementById('cfgGroqModel');
+  if(kEl && k) kEl.value = k;
+  if(mEl) mEl.value = m;
+  // Update badge
+  const badge = document.querySelector('.ai-model-badge');
+  if(badge) badge.textContent = getGroqModel().replace('llama-3.3-70b-versatile','llama-3.3-70b ✅ Free');
+}
+
+// Core Groq API call (OpenAI-compatible)
+async function callGroq(systemPrompt, userPrompt){
+  const key   = getGroqKey();
+  const model = getGroqModel();
+  if(!key) throw new Error('No API key. Go to Configuration → AI Settings and enter your free Groq key.');
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model,
+      messages:[
+        { role:'system', content: systemPrompt },
+        { role:'user',   content: userPrompt   }
+      ],
+      temperature: 0.4,
+      max_tokens: 1500
+    })
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `Groq API error ${res.status}`);
+  }
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || 'No response from AI.';
+}
+
+// Build patient context
+function buildPatientContext(){
+  if(!patients.length) return 'No patients currently registered.';
+  return patients.map((p,i)=>{
+    const d = liveData[p.chId];
+    const status = d ? (d.pct < 20 ? 'CRITICAL' : d.pct < 50 ? 'LOW' : 'OK') : 'NO DATA';
+    const pct  = d ? d.pct.toFixed(1)+'%' : '—';
+    const rem  = d ? d.remaining.toFixed(0)+' mL' : '—';
+    const rate = d ? d.rate.toFixed(0)+' mL/hr' : '—';
+    return `Patient ${i+1}: ${p.name||'Unknown'} | Ward: ${p.ward||'—'} | Bed: ${p.bed||'—'} | IV Status: ${status} | Fluid: ${pct} (${rem} remaining) | IV Rate: ${rate}`;
+  }).join('\n');
+}
+
+// ─── CHAT ───────────────────────────────────────────────────────
+let aiChatHistory = [];
+
+async function sendAiChat(){
+  const input = document.getElementById('aiChatInput');
+  const msg   = input.value.trim();
+  if(!msg) return;
+  if(!getGroqKey()){ showToast('⚠️ Set Groq API Key in Configuration first','error'); return; }
+  input.value = ''; input.style.height = '';
+  appendChatMsg('user', msg);
+  showTyping(true);
+  document.getElementById('aiSendBtn').disabled = true;
+  aiChatHistory.push({ role:'user', content: msg });
+  const history = aiChatHistory.slice(-8).map(m=>`${m.role==='user'?'Nurse':'AI'}: ${m.content}`).join('\n');
+  const system = `You are a helpful hospital AI assistant integrated into IV FluidWatch — a real-time IV fluid and patient monitoring dashboard. Be concise, professional, and helpful. Current patient data:\n${buildPatientContext()}`;
+  const prompt = `${history}\nNurse: ${msg}`;
+  try{
+    const reply = await callGroq(system, prompt);
+    aiChatHistory.push({ role:'assistant', content: reply });
+    appendChatMsg('bot', reply);
+  }catch(err){ appendChatMsg('bot','❌ '+err.message); }
+  finally{ showTyping(false); document.getElementById('aiSendBtn').disabled=false; input.focus(); }
+}
+
+function appendChatMsg(role, text){
+  const container = document.getElementById('aiMessages');
+  const typing    = document.getElementById('aiTyping');
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const formatted = text
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/`([^`]+)`/g,'<code style="background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-family:monospace;font-size:.76rem;">$1</code>')
+    .replace(/\n/g,'<br>');
+  div.innerHTML = `<div class="ai-msg-avatar">${role==='bot'?'🤖':'👤'}</div><div><div class="ai-msg-bubble">${formatted}</div><div class="ai-msg-time">${now}</div></div>`;
+  container.insertBefore(div, typing);
+  container.scrollTop = container.scrollHeight;
+}
+
+function showTyping(show){
+  const t=document.getElementById('aiTyping');
+  t.style.display=show?'flex':'none';
+  if(show){ document.getElementById('aiMessages').scrollTop=99999; }
+}
+
+// ─── SUMMARIZE ──────────────────────────────────────────────────
+let lastSummaryText='';
+
+async function aiSummarizePatients(){
+  if(!getGroqKey()){ showToast('⚠️ Set Groq API Key in Configuration first','error'); return; }
+  const btn=document.getElementById('btnSummarize'); const out=document.getElementById('summaryOutput');
+  btn.textContent='⏳ Generating…'; btn.disabled=true; out.classList.remove('show');
+  const system=`You are a hospital charge nurse AI assistant. Generate concise, professional clinical summaries.`;
+  const prompt=`Generate a clinical patient summary report for IV FluidWatch dashboard.\n\nPatient Data:\n${buildPatientContext()}\n\nInclude: Overall Status, Critical Alerts, Patient Summary, Recommendations.`;
+  try{
+    const reply=await callGroq(system,prompt);
+    lastSummaryText=reply; out.textContent=reply; out.classList.add('show');
+    document.getElementById('btnSumToChat').style.display='inline-flex';
+    showToast('✅ Summary generated','success');
+  }catch(err){ out.textContent='❌ '+err.message; out.classList.add('show'); }
+  finally{ btn.textContent='📋 Generate Summary'; btn.disabled=false; }
+}
+
+function aiSendSummaryToChat(){
+  if(!lastSummaryText) return;
+  appendChatMsg('bot','📋 **Patient Summary:**\n\n'+lastSummaryText);
+  nav('ai');
+}
+
+// ─── SHIFT REPORT ───────────────────────────────────────────────
+async function aiGenerateShiftReport(){
+  if(!getGroqKey()){ showToast('⚠️ Set Groq API Key in Configuration first','error'); return; }
+  const shift=document.getElementById('aiShiftType').value;
+  const btn=document.getElementById('btnShiftReport'); const out=document.getElementById('shiftReportOutput');
+  btn.textContent='⏳ Generating…'; btn.disabled=true; out.classList.remove('show');
+  const labels={morning:'Morning (06:00–14:00)',afternoon:'Afternoon (14:00–22:00)',night:'Night (22:00–06:00)'};
+  const system=`You are a hospital charge nurse AI. Write professional clinical shift handover reports.`;
+  const prompt=`Write a shift handover report for the ${labels[shift]} shift.\n\nCurrent patient data:\n${buildPatientContext()}\n\nInclude: 1) Shift Summary 2) Critical Patients 3) Patient Status 4) Pending Actions 5) Handover Notes.`;
+  try{
+    const reply=await callGroq(system,prompt); out.textContent=reply; out.classList.add('show');
+    // Auto-save to Firebase
+    if(window._firebaseReady && window._firebaseReady()){
+      await window.fbSaveShiftReport(reply, shift);
+    }
+    showToast('✅ Shift report generated & saved to Firebase','success');
+  }catch(err){ out.textContent='❌ '+err.message; out.classList.add('show'); }
+  finally{ btn.textContent='📝 Generate Report'; btn.disabled=false; }
+}
+
+// ─── CONTENT GENERATOR ──────────────────────────────────────────
+async function aiGenerateContent(){
+  if(!getGroqKey()){ showToast('⚠️ Set Groq API Key in Configuration first','error'); return; }
+  const type=document.getElementById('aiContentType').value;
+  const btn=document.getElementById('btnGenContent'); const out=document.getElementById('contentOutput');
+  btn.textContent='⏳ Generating…'; btn.disabled=true; out.classList.remove('show');
+  const prompts={
+    iv_protocol:`Write a professional IV fluid safety protocol reminder for hospital nursing staff. Include key checks, flow rate monitoring, and escalation criteria.`,
+    patient_instructions:`Write simple patient instructions for IV fluid infusion — what to expect, restrictions, and when to call the nurse. Use plain language.`,
+    alert_memo:`Based on data:\n${buildPatientContext()}\n\nDraft a brief critical alert memo for nursing staff about IV fluid patients needing immediate attention.`,
+    ward_notice:`Write a ward notice reminding nursing staff to monitor the IV FluidWatch dashboard, respond to alerts, and follow critical fluid protocols.`,
+    custom:`Provide a helpful clinical content template. Ask the nurse to describe what they need in the chat for a more specific result.`
+  };
+  try{
+    const reply=await callGroq('You are a hospital clinical content AI assistant.',prompts[type]);
+    out.textContent=reply; out.classList.add('show');
+    showToast('✅ Content generated','success');
+  }catch(err){ out.textContent='❌ '+err.message; out.classList.add('show'); }
+  finally{ btn.textContent='✍️ Generate'; btn.disabled=false; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HEALTH ANALYSIS PAGE — VITAL SIGNS + DISEASE RISK
+// ═══════════════════════════════════════════════════════════════
+
+// Stored vitals: { [patientChId]: { hr, spo2, temp } }
+let vitalsData = JSON.parse(localStorage.getItem('hm_vitals')||'{}');
+
+function saveVitals(){
+  localStorage.setItem('hm_vitals', JSON.stringify(vitalsData));
+}
+
+// Normal ranges for real-time colour chips
+function hrStatus(v){  const n=parseFloat(v); if(!v||isNaN(n)) return 'idle'; return n<60||n>100?n<50||n>130?'crit':'warn':'ok'; }
+function spo2Status(v){ const n=parseFloat(v); if(!v||isNaN(n)) return 'idle'; return n<90?'crit':n<95?'warn':'ok'; }
+function tempStatus(v){ const n=parseFloat(v); if(!v||isNaN(n)) return 'idle'; return n<35||n>39.5?'crit':n<36.1||n>37.5?'warn':'ok'; }
+
+function vitalChip(label, val, statusFn){
+  const s=statusFn(val); const map={ok:'vs-ok',warn:'vs-warn',crit:'vs-crit',idle:'vs-idle'};
+  const icon={ok:'✅',warn:'⚠️',crit:'🚨',idle:'—'};
+  return `<span class="vs-chip ${map[s]}">${icon[s]} ${label}: ${val||'—'}</span>`;
+}
+
+function renderHealthPage(){
+  updateAiKeyWarning();
+  const grid=document.getElementById('vitalsGrid');
+  if(!patients.length){
+    grid.innerHTML=`<div class="empty"><div class="empty-icon">🩺</div><div class="empty-text">No patients yet</div><div class="empty-sub">Assign patients in Patient Registry first</div></div>`;
+  } else {
+    // render vital cards
+    grid.innerHTML = patients.map((p,i)=>{
+    const v = vitalsData[p.chId] || {};
+    const d = liveData[p.chId];
+    const ivPct = d ? d.pct.toFixed(0)+'%' : '—';
+    const st = d ? (d.pct<20?'🚨 Critical':d.pct<50?'⚠️ Low':'✅ OK') : '⚪ No Data';
+    return `<div class="vital-card">
+      <div class="vital-card-hdr">
+        <div>
+          <div class="vital-patient-name">🧑‍⚕️ ${p.name||'Unknown Patient'}</div>
+          <div class="vital-patient-meta">🏥 ${p.ward||'—'} · 🛏️ ${p.bed||'—'} · IV: ${st} (${ivPct})</div>
+        </div>
+      </div>
+      <div class="vital-inputs">
+        <div class="vital-input-group">
+          <label>❤️ Heart Rate</label>
+          <input type="number" id="hr_${p.chId}" placeholder="72" min="0" max="300"
+            value="${v.hr||''}" oninput="updateVital('${p.chId}','hr',this.value)" />
+          <div class="vi-unit">bpm · Normal: 60–100</div>
+        </div>
+        <div class="vital-input-group">
+          <label>🩸 SpO₂</label>
+          <input type="number" id="spo2_${p.chId}" placeholder="98" min="0" max="100"
+            value="${v.spo2||''}" oninput="updateVital('${p.chId}','spo2',this.value)" />
+          <div class="vi-unit">% · Normal: 95–100</div>
+        </div>
+        <div class="vital-input-group">
+          <label>🌡️ Temperature</label>
+          <input type="number" id="temp_${p.chId}" placeholder="37.0" min="30" max="45" step="0.1"
+            value="${v.temp||''}" oninput="updateVital('${p.chId}','temp',this.value)" />
+          <div class="vi-unit">°C · Normal: 36.1–37.5</div>
+        </div>
+      </div>
+      <div class="vital-card-foot">
+        <div class="vital-status-row" id="vstatus_${p.chId}">
+          ${vitalChip('HR', v.hr, hrStatus)}
+          ${vitalChip('SpO₂', v.spo2, spo2Status)}
+          ${vitalChip('Temp', v.temp, tempStatus)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  }
+  // Always load saved records
+  loadAnalysisRecords();
+}
+
+function updateVital(chId, field, value){
+  if(!vitalsData[chId]) vitalsData[chId]={};
+  vitalsData[chId][field] = value;
+  saveVitals();
+  // Update chips live
+  const v=vitalsData[chId];
+  const el=document.getElementById('vstatus_'+chId);
+  if(el) el.innerHTML = vitalChip('HR',v.hr,hrStatus)+vitalChip('SpO₂',v.spo2,spo2Status)+vitalChip('Temp',v.temp,tempStatus);
+}
+
+function clearVitals(){
+  if(!confirm('Clear all entered vital signs?')) return;
+  vitalsData={};
+  saveVitals();
+  renderHealthPage();
+  document.getElementById('aapBody').innerHTML='<div class="aap-empty">Vitals cleared. Enter new values above.</div>';
+  showToast('✅ Vitals cleared','success');
+}
+
+// ─── MAIN AI ANALYSIS ───────────────────────────────────────────
+let lastAnalysisReport = '';
+
+async function runHealthAnalysis(){
+  if(!getGroqKey()){ showToast('⚠️ Set Groq API Key in Configuration → AI Settings first','error'); nav('config'); return; }
+  if(!patients.length){ showToast('⚠️ No patients to analyse','error'); return; }
+
+  // Check if any vitals entered
+  const hasVitals = patients.some(p=> vitalsData[p.chId] && (vitalsData[p.chId].hr || vitalsData[p.chId].spo2 || vitalsData[p.chId].temp));
+  if(!hasVitals){ showToast('⚠️ Enter at least one patient\'s vital signs first','error'); return; }
+
+  const btn=document.getElementById('btnRunAnalysis');
+  const loading=document.getElementById('aapLoading');
+  const body=document.getElementById('aapBody');
+  btn.textContent='⏳ Analysing…'; btn.disabled=true;
+  loading.style.display='block'; body.innerHTML='';
+
+  // Build per-patient vitals summary
+  const patientVitalsList = patients.map(p=>{
+    const v=vitalsData[p.chId]||{};
+    const d=liveData[p.chId];
+    const ivStatus=d?(d.pct<20?'Critical (<20% remaining)':d.pct<50?'Low (20-50% remaining)':'Normal'):' No data';
+    const hrVal  = v.hr   ? `${v.hr} bpm`   : 'Not recorded';
+    const spo2Val= v.spo2 ? `${v.spo2}%`    : 'Not recorded';
+    const tempVal= v.temp ? `${v.temp}°C`   : 'Not recorded';
+    return `Patient: ${p.name||'Unknown'} | Ward: ${p.ward||'—'} | Bed: ${p.bed||'—'}
+  - Heart Rate: ${hrVal}
+  - SpO₂ (Oxygen Saturation): ${spo2Val}
+  - Body Temperature: ${tempVal}
+  - IV Fluid Status: ${ivStatus}`;
+  }).filter((_,i)=>{
+    const p=patients[i]; const v=vitalsData[p.chId]||{};
+    return v.hr||v.spo2||v.temp;
+  }).join('\n\n');
+
+  const systemPrompt = `You are an expert clinical AI assistant integrated in a hospital IV monitoring dashboard. 
+You analyse patient vital signs and provide structured health risk assessments.
+Always include a DISCLAIMER that your analysis is indicative only and not a substitute for clinical judgment.
+Be structured, clear, and medically accurate. Format each patient's analysis clearly.`;
+
+  const userPrompt = `Analyse the following patients' vital signs and IV fluid data. For each patient:
+1. Evaluate if vitals are NORMAL, WARNING, or CRITICAL
+2. List POSSIBLE diseases or health conditions based on the combination of readings
+3. Give specific CLINICAL CONCERNS (e.g., hypoxia, dehydration, sepsis, arrhythmia)
+4. Provide immediate RECOMMENDED ACTIONS for nursing staff
+5. Note any correlation between IV fluid status and vital signs
+
+Use this format for each patient:
+── PATIENT: [Name] ──
+Status: [NORMAL / WARNING / CRITICAL]
+Vital Summary: [brief one-line summary]
+Possible Conditions: [list]
+Clinical Concerns: [list]
+Recommended Actions: [numbered list]
+IV Fluid Note: [observation]
+
+Patient Data:
+${patientVitalsList}
+
+End with an overall WARD SUMMARY with priority action list.`;
+
+  try{
+    const reply = await callGroq(systemPrompt, userPrompt);
+    lastAnalysisReport = reply;
+    // Auto-save to Firebase
+    if(window._firebaseReady && window._firebaseReady()){
+      const vitalsSnapshot = {};
+      patients.forEach(p=>{ if(vitalsData[p.chId]) vitalsSnapshot[p.name||p.chId] = vitalsData[p.chId]; });
+      await window.fbSaveAnalysis(reply, patients.length, vitalsSnapshot);
+      loadAnalysisRecords(); // refresh records list
+    }
+    // Render nicely
+    renderAnalysisResult(reply);
+    document.getElementById('btnCopyReport').style.display='inline-flex';
+    showToast('✅ Health analysis complete','success');
+  }catch(err){
+    body.innerHTML=`<div style="color:var(--red);padding:16px;">❌ ${err.message}</div>`;
+  }finally{
+    loading.style.display='none';
+    btn.textContent='🧠 Analyse All Patients'; btn.disabled=false;
+  }
+}
+
+function renderAnalysisResult(text){
+  const body = document.getElementById('aapBody');
+  // Split by patient sections
+  const sections = text.split(/──\s*PATIENT:/i).filter(Boolean);
+  if(sections.length <= 1){
+    // Plain text fallback
+    body.innerHTML=`<div class="aap-pr-body">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+    return;
+  }
+  // First section might be intro text
+  let html = '';
+  sections.forEach((sec,i)=>{
+    const lines = sec.trim().split('\n');
+    const nameRaw = (i===0 && !lines[0].includes('Status:')) ? '' : lines[0];
+    const name = nameRaw.trim().replace(/──$/,'').trim();
+
+    // Determine status colour
+    const statusMatch = sec.match(/Status:\s*(NORMAL|WARNING|CRITICAL)/i);
+    const status = statusMatch ? statusMatch[1].toUpperCase() : '';
+    const statusColor = status==='CRITICAL'?'var(--red)':status==='WARNING'?'var(--amber)':'var(--green)';
+    const statusBg   = status==='CRITICAL'?'rgba(239,68,68,.08)':status==='WARNING'?'rgba(245,158,11,.08)':'rgba(16,185,129,.08)';
+
+    // Format body
+    const bodyText = lines.slice(1).join('\n')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/(CRITICAL|CRITICAL LEVEL)/gi,'<strong style="color:var(--red)">$1</strong>')
+      .replace(/(WARNING|CAUTION)/gi,'<strong style="color:var(--amber)">$1</strong>')
+      .replace(/Possible Conditions:/gi,'<strong style="color:#7c3aed">🔍 Possible Conditions:</strong>')
+      .replace(/Clinical Concerns:/gi,'<strong style="color:var(--red)">⚠️ Clinical Concerns:</strong>')
+      .replace(/Recommended Actions:/gi,'<strong style="color:var(--accent)">✅ Recommended Actions:</strong>')
+      .replace(/IV Fluid Note:/gi,'<strong style="color:var(--purple)">💉 IV Fluid Note:</strong>')
+      .replace(/Vital Summary:/gi,'<strong>📊 Vital Summary:</strong>')
+      .replace(/\n/g,'<br>');
+
+    html += `<div class="aap-patient-result" style="border-left:4px solid ${statusColor};background:${statusBg}">
+      <div class="aap-pr-hdr">
+        <div class="aap-pr-name">🧑‍⚕️ ${name||'Patient '+(i+1)}</div>
+        ${status?`<span class="badge ${status==='CRITICAL'?'b-crit':status==='WARNING'?'b-warn':'b-ok'}">${status}</span>`:''}
+      </div>
+      <div class="aap-pr-body">${bodyText}</div>
+    </div>`;
+  });
+
+  // Check for ward summary
+  const summaryMatch = text.match(/WARD SUMMARY[\s\S]*/i);
+  if(summaryMatch){
+    html += `<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:11px;padding:14px 16px;margin-top:8px;">
+      <div style="font-size:.83rem;font-weight:700;color:#0369a1;margin-bottom:8px;">🏥 Ward Summary</div>
+      <div style="font-size:.8rem;line-height:1.75;">${summaryMatch[0].replace(/WARD SUMMARY/i,'').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+    </div>`;
+  }
+
+  html += `<div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:9px;padding:10px 14px;margin-top:12px;font-size:.72rem;color:#92400e;">
+    ⚕️ <strong>Medical Disclaimer:</strong> This AI analysis is indicative only and is NOT a clinical diagnosis. Always consult a qualified medical professional for clinical decisions.
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+function copyAnalysisReport(){
+  if(!lastAnalysisReport) return;
+  navigator.clipboard.writeText(lastAnalysisReport)
+    .then(()=>showToast('✅ Report copied to clipboard','success'))
+    .catch(()=>showToast('❌ Could not copy','error'));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVED RECORDS — LOAD & VIEW
+// ═══════════════════════════════════════════════════════════════
+
+let currentRecordText = '';
+
+// ── Load Analysis Records ──
+async function loadAnalysisRecords(){
+  const list = document.getElementById('analysisRecordsList');
+  if(!window._firebaseReady || !window._firebaseReady()){
+    list.innerHTML='<div class="record-empty">🔥 Firebase not connected. Go to Configuration → Firebase Settings.</div>';
+    return;
+  }
+  list.innerHTML='<div class="record-empty">⏳ Loading…</div>';
+  const records = await window.fbLoadRecords('ai_health_analysis', 20);
+  if(!records.length){
+    list.innerHTML='<div class="record-empty">No saved analyses yet. Run an analysis above to save one.</div>';
+    return;
+  }
+  list.innerHTML = records.map(r=>{
+    const ts = r.createdAt?.toDate ? r.createdAt.toDate() : new Date();
+    const dateStr = ts.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const preview = r.text ? r.text.slice(0,120).replace(/\n/g,' ')+'…' : '—';
+    return `<div class="record-item" onclick="openRecordDetail('Health Analysis','${dateStr} ${timeStr} · By ${r.createdBy||'Nurse'} · ${r.patientCount||0} patients',\`${(r.text||'').replace(/`/g,"'").replace(/\\/g,'\\\\')}\`)">
+      <div class="record-item-hdr">
+        <div class="record-item-title">🧠 Health Analysis — ${dateStr}</div>
+        <div class="record-item-meta">${timeStr} · ${r.patientCount||0} pts</div>
+      </div>
+      <div class="record-item-preview">${preview}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Load Shift Report Records ──
+async function loadShiftReportRecords(){
+  const list = document.getElementById('shiftReportRecordsList');
+  list.style.display = 'block';
+  if(!window._firebaseReady || !window._firebaseReady()){
+    list.innerHTML='<div class="record-empty">🔥 Firebase not connected.</div>';
+    return;
+  }
+  list.innerHTML='<div class="record-empty">⏳ Loading…</div>';
+  const records = await window.fbLoadRecords('ai_shift_reports', 20);
+  if(!records.length){
+    list.innerHTML='<div class="record-empty">No saved shift reports yet.</div>';
+    return;
+  }
+  const shiftLabel = {morning:'🌅 Morning', afternoon:'🌤️ Afternoon', night:'🌙 Night'};
+  list.innerHTML = records.map(r=>{
+    const ts = r.createdAt?.toDate ? r.createdAt.toDate() : new Date();
+    const dateStr = ts.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    const timeStr = ts.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const label = shiftLabel[r.shiftType] || r.shiftType || 'Shift';
+    const preview = r.text ? r.text.slice(0,100).replace(/\n/g,' ')+'…' : '—';
+    return `<div class="record-item" onclick="openRecordDetail('${label} Shift Report','${dateStr} ${timeStr} · By ${r.createdBy||'Nurse'}',\`${(r.text||'').replace(/`/g,"'").replace(/\\/g,'\\\\')}\`)">
+      <div class="record-item-hdr">
+        <div class="record-item-title">${label} Report — ${dateStr}</div>
+        <div class="record-item-meta">${timeStr} · ${r.createdBy||'Nurse'}</div>
+      </div>
+      <div class="record-item-preview">${preview}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Record Detail Modal ──
+function openRecordDetail(title, meta, text){
+  currentRecordText = text;
+  document.getElementById('rdmTitle').textContent = title;
+  document.getElementById('rdmMeta').textContent  = meta;
+  document.getElementById('rdmBody').textContent  = text;
+  document.getElementById('recordDetailOverlay').classList.add('show');
+}
+
+function closeRecordDetail(){
+  document.getElementById('recordDetailOverlay').classList.remove('show');
+  currentRecordText = '';
+}
+
+function copyRecordText(){
+  if(!currentRecordText) return;
+  navigator.clipboard.writeText(currentRecordText)
+    .then(()=>showToast('✅ Copied to clipboard','success'))
+    .catch(()=>showToast('❌ Could not copy','error'));
+}
+
+// Close on overlay click
+document.addEventListener('click', e=>{
+  if(e.target.id==='recordDetailOverlay') closeRecordDetail();
+  if(e.target.id==='patientModal') closeModal();
+});
+
+// Auto-resize chat textarea
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('aiChatInput');
+  if(ta) ta.addEventListener('input',function(){ this.style.height=''; this.style.height=Math.min(this.scrollHeight,120)+'px'; });
+});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  loadConfig();
+  loadFirebaseConfigUI();
+  renderRegistry();
+  updateGlobalStats();
+  startAutoRefresh();
+  // Load Groq key into config UI
+  const k = getGroqKey(); const m = getGroqModel();
+  const kEl = document.getElementById('cfgGroqKey');
+  const mEl = document.getElementById('cfgGroqModel');
+  if(kEl && k) kEl.value = k;
+  if(mEl) mEl.value = m;
+  updateAiKeyWarning();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// EXPOSE FUNCTIONS TO WINDOW (required because script is type=module)
+// HTML onclick attributes can only call global window functions
+// ═══════════════════════════════════════════════════════════════
+window.nav                  = nav;
+window.openDetail           = openDetail;
+window.closeDetail          = closeDetail;
+window.openAddModal         = openAddModal;
+window.openEditModal        = openEditModal;
+window.closeModal           = closeModal;
+window.pushPatient          = pushPatient;
+window.removePatient        = removePatient;
+window.refreshAllStatus     = refreshAllStatus;
+window.saveConfig           = saveConfig;
+window.saveGroqConfig       = saveGroqConfig;
+window.saveFirebaseConfig2  = saveFirebaseConfig2;
+window.exportData           = exportData;
+window.clearAllData         = clearAllData;
+window.copyText             = copyText;
+window.toggleWard           = toggleWard;
+window.renderOverview       = renderOverview;
+window.renderAlerts         = renderAlerts;
+window.renderWards          = renderWards;
+window.renderDevices        = renderDevices;
+window.sendAiChat           = sendAiChat;
+window.aiSummarizePatients  = aiSummarizePatients;
+window.aiSendSummaryToChat  = aiSendSummaryToChat;
+window.aiGenerateShiftReport= aiGenerateShiftReport;
+window.aiGenerateContent    = aiGenerateContent;
+window.runHealthAnalysis    = runHealthAnalysis;
+window.clearVitals          = clearVitals;
+window.updateVital          = updateVital;
+window.loadAnalysisRecords  = loadAnalysisRecords;
+window.loadShiftReportRecords = loadShiftReportRecords;
+window.openRecordDetail     = openRecordDetail;
+window.closeRecordDetail    = closeRecordDetail;
+window.copyRecordText       = copyRecordText;
+window.copyAnalysisReport   = copyAnalysisReport;
+window.setPushStatus        = setPushStatus;
+window.applyGlobalConfigFromFirebase = applyGlobalConfigFromFirebase;
+window.togglePassword       = togglePassword;
+</script>
+
+</div></div></body></html>
