@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html -->
+<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IV FluidWatch — Hospital Management</title>
-<link href="./hospimanage 5_files/css2" rel="stylesheet">
+<link href="./hospimanage 6_files/css2" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════
    MANAGEMENT DASHBOARD  (light theme)
@@ -895,7 +895,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     <div class="page" id="page-ai">
 
       <div class="ai-key-warn" id="aiKeyWarn">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="ai-layout">
@@ -1018,7 +1018,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     <div class="page" id="page-health">
 
       <div class="ai-key-warn" id="healthKeyWarn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 13px;font-size:.73rem;color:#b45309;margin-bottom:14px;">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="sec-hdr" style="margin-bottom:16px;">
@@ -1129,7 +1129,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div>
   </div><div class="toast" id="toast"></div>
 
-<script src="./hospimanage 5_files/chart.umd.min.js.download"></script>
+<script src="./hospimanage 6_files/chart.umd.min.js.download"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1821,8 +1821,8 @@ async function detLoadHistory() {
     if (history.length) {
       detReadings = history;
       document.getElementById('dCount').textContent = detReadings.length;
-      // Start the chart/table 10s timer now that we have data
-      startChartTimer();
+      // Small delay so canvas is fully rendered before chart draws
+      setTimeout(() => startChartTimer(), 300);
     }
   } catch(e) {
     // History load failed — live data will populate the chart
@@ -1914,8 +1914,14 @@ function detRenderChart(entries, cap){
 }
 
 function detRenderTable(entries, cap){
+  if (!entries.length) {
+    document.getElementById('dTBody').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">No readings yet — connect ESP32 to start logging</td></tr>';
+    return;
+  }
   const rows=[...entries].reverse().map((e,i)=>{
-    const pct=((e.infused/cap)*100).toFixed(1);
+    const inf = e.infused ?? Math.max(0, cap - e.remaining); // handle missing infused
+    const pct=((inf/cap)*100).toFixed(1);
     let cls,lbl;
     if(e.remaining>cap*0.5){lbl='OK';cls='db-ok';}
     else if(e.remaining>cap*0.2){lbl='LOW';cls='db-low';}
@@ -1925,7 +1931,7 @@ function detRenderTable(entries, cap){
       <td>${e.time.toLocaleString()}</td>
       <td style="color:#4a6a80">${e.weightKg.toFixed(4)}</td>
       <td style="color:#00d4ff;font-weight:600">${e.remaining.toFixed(1)}</td>
-      <td style="color:#10e898">${e.infused.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
+      <td style="color:#10e898">${inf.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
       <td><span class="${cls}">${lbl}</span></td>
     </tr>`;
   });
