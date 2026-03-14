@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v4.html -->
+<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IV FluidWatch — Hospital Management</title>
-<link href="./IV FluidWatch — Hospital Management_files/css2" rel="stylesheet">
+<link href="./hospimanage 5_files/css2" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════
    MANAGEMENT DASHBOARD  (light theme)
@@ -895,7 +895,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     <div class="page" id="page-ai">
 
       <div class="ai-key-warn" id="aiKeyWarn">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v4.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="ai-layout">
@@ -1018,7 +1018,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     <div class="page" id="page-health">
 
       <div class="ai-key-warn" id="healthKeyWarn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 13px;font-size:.73rem;color:#b45309;margin-bottom:14px;">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v4.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v5.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="sec-hdr" style="margin-bottom:16px;">
@@ -1129,7 +1129,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div>
   </div><div class="toast" id="toast"></div>
 
-<script src="./IV FluidWatch — Hospital Management_files/chart.umd.min.js.download"></script>
+<script src="./hospimanage 5_files/chart.umd.min.js.download"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1621,6 +1621,7 @@ function openDetail(patientIdx){
 
 function closeDetail(){
   detStopLiveListener();
+  stopChartTimer();
   if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
   detReadings = [];
   nav(prevPage);
@@ -1683,10 +1684,13 @@ function detStartLiveListener() {
     const nowTs    = Date.now(); // Use arrival time as real timestamp
 
     // Add to rolling readings buffer (max 30 points)
-    detReadings.push({ time: new Date(nowTs), weightKg, remaining });
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining, infused: Math.max(0, cap - remaining) });
     if (detReadings.length > 30) detReadings.shift();
 
     detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
+
+    // Start chart timer on first reading if not already running
+    if (!detChartTimer) startChartTimer();
   }, (error) => {
     detShowAlert('Firebase error: ' + error.message);
     detSetStatus(false);
@@ -1700,61 +1704,58 @@ function detStopLiveListener() {
   }
 }
 
+let detChartTimer = null; // 10-second chart/table refresh timer
+
 // Update all live display elements with smooth animation
+// Chart and table are NOT updated here — they update on a 10s timer
 function detUpdateLiveDisplay(remaining, weightKg, cap, nowTs) {
   const infused = Math.max(0, cap - remaining);
   const pct     = ((infused / cap) * 100);
   const pctStr  = pct.toFixed(1);
 
-  // ── Calculate rolling infusion rate (mL/hr) from last 3 readings ──
+  // ── Calculate rolling infusion rate (mL/hr) from last 5 readings ──
   let rate = 0;
   if (detReadings.length >= 2) {
-    // Use up to last 5 readings for a rolling average rate
     const window5 = detReadings.slice(-5);
     const first   = window5[0];
     const last    = window5[window5.length - 1];
-    const dh      = (last.time - first.time) / 3600000; // hours
-    if (dh > 0.0001) { // at least ~0.36 seconds apart
+    const dh      = (last.time - first.time) / 3600000;
+    if (dh > 0.0001) {
       rate = Math.max(0, (first.remaining - last.remaining) / dh);
     }
   }
 
   const eta = rate > 0 ? (remaining / rate) : null;
 
-  // ── Smooth animated value updates ──
+  // ── Smooth animated value updates (INSTANT — every ESP32 push) ──
   animateValue('dRemaining', remaining, 1, '<span class="dhc-unit">mL</span>');
   animateValue('dInfused',   infused,   1, '<span class="dhc-unit">mL</span>');
   animateValue('dWeight',    weightKg,  4, '<span class="dstat-unit">kg</span>');
   animateValue('dAvgRate',   rate,      1, '<span class="dstat-unit">mL/hr</span>');
 
-  // Rate display (hero card)
-  document.getElementById('dRate').innerHTML = rate.toFixed(1) + '<span class="dhc-unit">mL/hr</span>';
-  document.getElementById('dETA').textContent = 'ETA: ' + (eta != null ? fmtH(eta) : '—');
-
-  // Timestamp (real time, not ESP32 boot time)
+  document.getElementById('dRate').innerHTML     = rate.toFixed(1) + '<span class="dhc-unit">mL/hr</span>';
+  document.getElementById('dETA').textContent    = 'ETA: ' + (eta != null ? fmtH(eta) : '—');
   document.getElementById('dRemainingTs').textContent = 'Updated: ' + new Date(nowTs).toLocaleString();
   document.getElementById('dInfusedPct').textContent  = pctStr + '% completed';
 
-  // Progress bar (CSS transition handles smooth movement)
+  // Progress bar
   const fill = document.getElementById('dProgFill');
-  fill.style.width    = pctStr + '%';
-  fill.className      = 'dprog-fill' + (remaining < cap * 0.2 ? ' warn' : '');
-  document.getElementById('dProgPct').textContent  = pctStr + '%';
-  document.getElementById('dProgMid').textContent  = (cap / 2).toFixed(0) + ' mL';
-  document.getElementById('dProgMax').textContent  = cap + ' mL';
+  fill.style.width  = pctStr + '%';
+  fill.className    = 'dprog-fill' + (remaining < cap * 0.2 ? ' warn' : '');
+  document.getElementById('dProgPct').textContent = pctStr + '%';
+  document.getElementById('dProgMid').textContent = (cap / 2).toFixed(0) + ' mL';
+  document.getElementById('dProgMax').textContent = cap + ' mL';
 
-  // Min / Max from rolling buffer
+  // Min / Max / Count from rolling buffer
   const rVals = detReadings.map(r => r.remaining);
-  const minR  = Math.min(...rVals);
-  const maxR  = Math.max(...rVals);
-  document.getElementById('dMin').innerHTML   = minR.toFixed(1) + '<span class="dstat-unit">mL</span>';
-  document.getElementById('dMax').innerHTML   = maxR.toFixed(1) + '<span class="dstat-unit">mL</span>';
-  document.getElementById('dCount').textContent = detReadings.length;
+  document.getElementById('dMin').innerHTML      = Math.min(...rVals).toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dMax').innerHTML      = Math.max(...rVals).toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dCount').textContent  = detReadings.length;
 
-  // Pulse animation on hero cards when new data arrives
+  // Pulse animation on hero cards
   document.querySelectorAll('.dhc').forEach(el => {
     el.classList.remove('live-pulse');
-    void el.offsetWidth; // force reflow
+    void el.offsetWidth;
     el.classList.add('live-pulse');
   });
 
@@ -1763,9 +1764,28 @@ function detUpdateLiveDisplay(remaining, weightKg, cap, nowTs) {
   updateGlobalStats();
   updateRegistryRow(detPatient.chId);
 
-  // Update chart and table with rolling buffer
+  // Chart and table are updated by the 10s timer — NOT here
+}
+
+// ── Chart + Table timer (every 10 seconds) ──
+function startChartTimer() {
+  stopChartTimer();
+  // Render immediately on start
+  const cap = parseFloat(detPatient?.cap) || 1000;
   detRenderChart(detReadings, cap);
   detRenderTable(detReadings, cap);
+  // Then every 10 seconds
+  detChartTimer = setInterval(() => {
+    if (!detPatient) return;
+    const c = parseFloat(detPatient.cap) || 1000;
+    detRenderChart(detReadings, c);
+    detRenderTable(detReadings, c);
+  }, 10000);
+}
+
+function stopChartTimer() {
+  clearInterval(detChartTimer);
+  detChartTimer = null;
 }
 
 // Load history readings from RTDB (for chart on first open)
@@ -1785,18 +1805,24 @@ async function detLoadHistory() {
     const cap = parseFloat(detPatient.cap) || 1000;
     const history = Object.values(raw)
       .filter(f => f.weight != null && !isNaN(parseFloat(f.weight)))
-      .map(f => ({
-        time: new Date(Date.now() - (Date.now() - parseInt(f.ts || 0))), // best-effort time
-        weightKg: parseFloat(f.weight),
-        remaining: Math.min(Math.max(0, kgToMl(parseFloat(f.weight))), cap)
-      }))
+      .map((f, i) => {
+        const rem = Math.min(Math.max(0, kgToMl(parseFloat(f.weight))), cap);
+        return {
+          // Use sequence-based time since ESP32 ts is millis() not unix time
+          // Space readings 15 seconds apart going back from now
+          time: new Date(Date.now() - (Object.values(raw).length - 1 - i) * 15000),
+          weightKg: parseFloat(f.weight),
+          remaining: rem,
+          infused: Math.max(0, cap - rem)
+        };
+      })
       .sort((a, b) => a.time - b.time);
 
     if (history.length) {
       detReadings = history;
-      detRenderChart(detReadings, cap);
-      detRenderTable(detReadings, cap);
       document.getElementById('dCount').textContent = detReadings.length;
+      // Start the chart/table 10s timer now that we have data
+      startChartTimer();
     }
   } catch(e) {
     // History load failed — live data will populate the chart
@@ -1822,7 +1848,7 @@ async function detFetchDataRest(){
     const weightKg  = parseFloat(d.weight)||0;
     const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
     const nowTs     = Date.now();
-    detReadings.push({ time: new Date(nowTs), weightKg, remaining });
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining, infused: Math.max(0, cap - remaining) });
     if (detReadings.length > 30) detReadings.shift();
     detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
     detSetStatus(true);
@@ -1834,28 +1860,55 @@ async function detFetchDataRest(){
 }
 
 function detRenderChart(entries, cap){
-  if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
+  if (!entries.length) return;
+
+  const labels   = entries.map(e => e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  const remaining = entries.map(e => parseFloat(e.remaining.toFixed(2)));
+  const infused   = entries.map(e => parseFloat((e.infused ?? Math.max(0, cap - e.remaining)).toFixed(2)));
+
+  // If chart already exists — just update data (much faster, no flicker)
+  if (detChartInst) {
+    detChartInst.data.labels              = labels;
+    detChartInst.data.datasets[0].data    = remaining;
+    detChartInst.data.datasets[1].data    = infused;
+    detChartInst.data.datasets[0].pointRadius = entries.length > 30 ? 0 : 3;
+    detChartInst.options.scales.y.max     = cap;
+    detChartInst.update('none'); // 'none' = no animation on update, prevents flicker
+    return;
+  }
+
+  // First time — create the chart
   const ctx = document.getElementById('dChart').getContext('2d');
-  const labels = entries.map(e=>e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-  const g1=ctx.createLinearGradient(0,0,0,220);g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
-  const g2=ctx.createLinearGradient(0,0,0,220);g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+  const g1=ctx.createLinearGradient(0,0,0,220);
+  g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
+  const g2=ctx.createLinearGradient(0,0,0,220);
+  g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+
   detChartInst = new Chart(ctx,{
     type:'line',
     data:{labels, datasets:[
-      {label:'Remaining (mL)',data:entries.map(e=>e.remaining.toFixed(2)),borderColor:'#00d4ff',backgroundColor:g1,borderWidth:2,pointRadius:entries.length>30?0:3,fill:true,tension:0.4,yAxisID:'y'},
-      {label:'Infused (mL)',  data:entries.map(e=>e.infused.toFixed(2)),  borderColor:'#10e898',backgroundColor:g2,borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'}
+      {label:'Remaining (mL)', data:remaining, borderColor:'#00d4ff', backgroundColor:g1,
+       borderWidth:2, pointRadius:entries.length>30?0:3, fill:true, tension:0.4, yAxisID:'y'},
+      {label:'Infused (mL)',   data:infused,   borderColor:'#10e898', backgroundColor:g2,
+       borderWidth:1.5, pointRadius:0, fill:true, tension:0.4, yAxisID:'y'}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{
+      responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{labels:{color:'#4a6a80',font:{family:'JetBrains Mono',size:11}}},
-        tooltip:{backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,titleColor:'#4a6a80',bodyColor:'#dff0ff',
-          titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:12},
-          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}}
+        tooltip:{
+          backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,
+          titleColor:'#4a6a80',bodyColor:'#dff0ff',
+          titleFont:{family:'JetBrains Mono',size:10},
+          bodyFont:{family:'JetBrains Mono',size:12},
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}
+        }
       },
       scales:{
         x:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'#0e1c28'}},
         y:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},callback:v=>v+' mL'},grid:{color:'#0e1c28'},max:cap}
-      },animation:{duration:600}
+      },
+      animation:{duration:600}
     }
   });
 }
