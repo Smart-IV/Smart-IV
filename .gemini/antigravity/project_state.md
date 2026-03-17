@@ -8,7 +8,7 @@
 ## 🛠️ Status Overview
 - **Repository**: Cloned and switched to `hrishi-dev`.
 - **Sync Infrastructure**: Initialized and pushed to GitHub.
-- **Workflow Agreement**: Antigravity automates `sync.ps1`, generates commit/merge messages, and manages branch synchronization and **integrated chat**. (ACTIVE)
+- **Workflow Agreement**: Antigravity automates `sync.ps1`, generates commit/merge messages, and manages branch synchronization. (ACTIVE)
 
 ## ⏭️ Next Milestones
 1. **Calibration**: Develop calibration logic for the 10kg load cell on the ESP32.
