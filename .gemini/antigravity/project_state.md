@@ -7,9 +7,10 @@
 
 ## 🛠️ Status Overview
 - **Repository**: Cloned and switched to `hrishi-dev`.
-- **Sync Infrastructure**: Initializing shared `.gemini/antigravity` folder.
+- **Sync Infrastructure**: Initialized and pushed to GitHub.
+- **Workflow Agreement**: Antigravity automates `sync.ps1`, generates commit/merge messages, and manages branch synchronization and **integrated chat**. (ACTIVE)
 
 ## ⏭️ Next Milestones
-1. Complete sync setup on Hrishi's laptop.
-2. Hand over onboarding prompts to Akash.
-3. Begin Smart IV hardware calibration and dashboard UI overhaul.
+1. **Calibration**: Develop calibration logic for the 10kg load cell on the ESP32.
+2. **Dashboard UI**: Overhaul the Netlify dashboard for a premium aesthetic.
+3. **Firebase Integration**: Ensure real-time syncing between ESP32 and the Web.
