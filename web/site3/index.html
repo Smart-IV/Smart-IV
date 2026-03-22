@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0068)file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>IV FluidWatch — Hospital Management</title>
-<link href="./hospimanage 6_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 /* ═══════════════════════════════════════════════════════
    MANAGEMENT DASHBOARD  (light theme)
@@ -547,7 +547,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 </head>
 <body>
 
-<div id="loginScreen" style="display: flex;">
+<div id="loginScreen">
   <div class="login-card">
 
     <div class="login-logo">
@@ -564,12 +564,15 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 
       <div class="login-fg">
         <label>Nurse ID</label>
-        <input type="text" id="loginEmail" placeholder="e.g. NURSE001" style="text-transform:uppercase" onkeydown="if(event.key===&#39;Enter&#39;) document.getElementById(&#39;loginPass&#39;).focus()">
+        <input type="text" id="loginEmail" placeholder="e.g. NURSE001"
+          style="text-transform:uppercase"
+          onkeydown="if(event.key==='Enter') document.getElementById('loginPass').focus()"/>
       </div>
       <div class="login-fg">
         <label>Password</label>
         <div class="pw-wrap">
-          <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key===&#39;Enter&#39;) doLogin()">
+          <input type="password" id="loginPass" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter') doLogin()"/>
           <button class="pw-toggle" type="button" onclick="togglePassword()" id="pwToggleBtn" title="Show/Hide Password">👁️</button>
         </div>
       </div>
@@ -593,17 +596,17 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div>
   <div class="sb-nav">
     <div class="sb-sec">Monitoring</div>
-    <div class="sb-item active" onclick="nav(&#39;registry&#39;)" id="nav-registry"><span class="si">🛏️</span> Patient Registry</div>
-    <div class="sb-item" onclick="nav(&#39;overview&#39;)" id="nav-overview"><span class="si">📊</span> Live Overview</div>
-    <div class="sb-item" onclick="nav(&#39;alerts&#39;)" id="nav-alerts"><span class="si">🚨</span> Alerts <span class="sb-badge" id="alertBadge" style="display:none">0</span></div>
+    <div class="sb-item active" onclick="nav('registry')" id="nav-registry"><span class="si">🛏️</span> Patient Registry</div>
+    <div class="sb-item" onclick="nav('overview')" id="nav-overview"><span class="si">📊</span> Live Overview</div>
+    <div class="sb-item" onclick="nav('alerts')" id="nav-alerts"><span class="si">🚨</span> Alerts <span class="sb-badge" id="alertBadge" style="display:none">0</span></div>
     <div class="sb-sec">Administration</div>
-    <div class="sb-item" onclick="nav(&#39;wards&#39;)" id="nav-wards"><span class="si">🏢</span> Ward Management</div>
-    <div class="sb-item" onclick="nav(&#39;devices&#39;)" id="nav-devices"><span class="si">📡</span> Devices</div>
+    <div class="sb-item" onclick="nav('wards')" id="nav-wards"><span class="si">🏢</span> Ward Management</div>
+    <div class="sb-item" onclick="nav('devices')" id="nav-devices"><span class="si">📡</span> Devices</div>
     <div class="sb-sec">AI Tools</div>
-    <div class="sb-item" onclick="nav(&#39;ai&#39;)" id="nav-ai"><span class="si">🤖</span> AI Assistant</div>
-    <div class="sb-item" onclick="nav(&#39;health&#39;)" id="nav-health"><span class="si">🩺</span> Health Analysis</div>
+    <div class="sb-item" onclick="nav('ai')" id="nav-ai"><span class="si">🤖</span> AI Assistant</div>
+    <div class="sb-item" onclick="nav('health')" id="nav-health"><span class="si">🩺</span> Health Analysis</div>
     <div class="sb-sec">Settings</div>
-    <div class="sb-item" onclick="nav(&#39;config&#39;)" id="nav-config"><span class="si">⚙️</span> Configuration</div>
+    <div class="sb-item" onclick="nav('config')" id="nav-config"><span class="si">⚙️</span> Configuration</div>
   </div>
   <div class="sb-bottom">
     <div class="session-bar">
@@ -648,7 +651,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="table-wrap">
         <table>
           <thead><tr><th>Patient Name</th><th>Ward</th><th>Room/Bed</th><th>Device ID</th><th>Bag Cap</th><th>Fluid Status</th><th>Last Saved</th><th>Actions</th></tr></thead>
-          <tbody id="regTbody"><tr><td colspan="8"><div class="empty"><div class="empty-icon">🛏️</div><div class="empty-text">No patients assigned yet</div><div class="empty-sub">Click "+ Assign Patient"</div></div></td></tr></tbody>
+          <tbody id="regTbody"></tbody>
         </table>
       </div>
     </div>
@@ -721,14 +724,14 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 
       <div id="fbSetupBanner" style="display:none;background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa;border-radius:13px;padding:18px 20px;margin-bottom:20px;">
         <div style="font-size:.88rem;font-weight:700;margin-bottom:6px;color:#9a3412;">🔥 Connect Firebase for Shared Data</div>
-        <div style="font-size:.75rem;color:#c2410c;margin-bottom:14px;line-height:1.6;">Without Firebase, each browser has its own separate data. Add your Firebase config below so your whole team sees the same patients in real-time.<br><strong>Free setup: </strong><a href="https://console.firebase.google.com/" target="_blank" style="color:#c2410c;">console.firebase.google.com</a> → New Project → Firestore Database → Web App</div>
+        <div style="font-size:.75rem;color:#c2410c;margin-bottom:14px;line-height:1.6;">Without Firebase, each browser has its own separate data. Add your Firebase config below so your whole team sees the same patients in real-time.<br><strong>Free setup: </strong><a href="https://console.firebase.google.com" target="_blank" style="color:#c2410c;">console.firebase.google.com</a> → New Project → Firestore Database → Web App</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <div class="fg"><label>API Key *</label><input id="fbApiKey" class="fmono" type="text" placeholder="AIzaSy…"></div>
-          <div class="fg"><label>Auth Domain *</label><input id="fbAuthDomain" class="fmono" type="text" placeholder="your-app.firebaseapp.com"></div>
-          <div class="fg"><label>Project ID *</label><input id="fbProjectId" class="fmono" type="text" placeholder="your-project-id"></div>
-          <div class="fg"><label>Storage Bucket</label><input id="fbStorageBucket" class="fmono" type="text" placeholder="your-app.appspot.com"></div>
-          <div class="fg"><label>Messaging Sender ID</label><input id="fbSenderId" class="fmono" type="text" placeholder="123456789"></div>
-          <div class="fg"><label>App ID</label><input id="fbAppId" class="fmono" type="text" placeholder="1:123…:web:abc…"></div>
+          <div class="fg"><label>API Key *</label><input id="fbApiKey" class="fmono" type="text" placeholder="AIzaSy…"/></div>
+          <div class="fg"><label>Auth Domain *</label><input id="fbAuthDomain" class="fmono" type="text" placeholder="your-app.firebaseapp.com"/></div>
+          <div class="fg"><label>Project ID *</label><input id="fbProjectId" class="fmono" type="text" placeholder="your-project-id"/></div>
+          <div class="fg"><label>Storage Bucket</label><input id="fbStorageBucket" class="fmono" type="text" placeholder="your-app.appspot.com"/></div>
+          <div class="fg"><label>Messaging Sender ID</label><input id="fbSenderId" class="fmono" type="text" placeholder="123456789"/></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId" class="fmono" type="text" placeholder="1:123…:web:abc…"/></div>
         </div>
         <button class="btn btn-primary" onclick="saveFirebaseConfig()">🔥 Connect Firebase</button>
         <div style="font-size:.7rem;color:#9a3412;margin-top:8px;">⚠️ Make sure Firestore rules allow read/write — for a team app set rules to <code style="background:rgba(154,52,18,.1);padding:1px 5px;border-radius:3px;">allow read, write: if true;</code></div>
@@ -738,10 +741,10 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
         <div class="cfg-panel-title">🔥 Firebase Configuration (Shared Data)</div>
         <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px;">Connect Firebase Firestore so all team members share the same patient data in real-time.</p>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-          <div class="fg"><label>API Key</label><input id="fbApiKey2" class="fmono" type="text" placeholder="AIzaSy…"></div>
-          <div class="fg"><label>Auth Domain</label><input id="fbAuthDomain2" class="fmono" type="text" placeholder="your-app.firebaseapp.com"></div>
-          <div class="fg"><label>Project ID</label><input id="fbProjectId2" class="fmono" type="text" placeholder="your-project-id"></div>
-          <div class="fg"><label>App ID</label><input id="fbAppId2" class="fmono" type="text" placeholder="1:123…:web:abc…"></div>
+          <div class="fg"><label>API Key</label><input id="fbApiKey2" class="fmono" type="text" placeholder="AIzaSy…"/></div>
+          <div class="fg"><label>Auth Domain</label><input id="fbAuthDomain2" class="fmono" type="text" placeholder="your-app.firebaseapp.com"/></div>
+          <div class="fg"><label>Project ID</label><input id="fbProjectId2" class="fmono" type="text" placeholder="your-project-id"/></div>
+          <div class="fg"><label>App ID</label><input id="fbAppId2" class="fmono" type="text" placeholder="1:123…:web:abc…"/></div>
         </div>
         <button class="btn btn-primary" onclick="saveFirebaseConfig2()">🔥 Save &amp; Connect</button>
         <span id="fbStatus" style="font-size:.75rem;color:var(--green);margin-left:12px;"></span>
@@ -749,15 +752,15 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="cfg-panel">
         <div class="cfg-panel-title">⚙️ Global Configuration</div>
         <div class="frow c2">
-          <div class="fg"><label>Firebase Realtime DB URL</label><input class="fmono" id="cfgRtdbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com"><div class="hint">Pre-filled for all device reads. Found in Firebase Console → Realtime Database.</div></div>
-          <div class="fg"><label>Admin Name</label><input id="cfgAdminName" type="text" placeholder="e.g. Head Nurse Priya"></div>
+          <div class="fg"><label>Firebase Realtime DB URL</label><input class="fmono" id="cfgRtdbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com"/><div class="hint">Pre-filled for all device reads. Found in Firebase Console → Realtime Database.</div></div>
+          <div class="fg"><label>Admin Name</label><input id="cfgAdminName" type="text" placeholder="e.g. Head Nurse Priya"/></div>
         </div>
         <div class="frow c2">
-          <div class="fg"><label>Hospital Name</label><input id="cfgHospital" type="text" placeholder="e.g. City General Hospital"></div>
+          <div class="fg"><label>Hospital Name</label><input id="cfgHospital" type="text" placeholder="e.g. City General Hospital"/></div>
           <div class="fg"><label>Auto-Refresh Interval</label>
             <select id="cfgRefresh">
               <option value="30000">30 seconds</option>
-              <option value="60000" selected="">1 minute</option>
+              <option value="60000" selected>1 minute</option>
               <option value="120000">2 minutes</option>
               <option value="300000">5 minutes</option>
             </select>
@@ -768,18 +771,18 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="cfg-panel">
         <div class="cfg-panel-title">🤖 AI Assistant Settings (Groq — Free)</div>
         <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:9px;padding:10px 14px;font-size:.74rem;color:#065f46;margin-bottom:12px;">
-          ✅ <strong>100% Free — No billing needed!</strong> Sign up at <a href="https://console.groq.com/" target="_blank" style="color:#065f46;font-weight:700;">console.groq.com</a> → API Keys → Create Key. Paste the key below (starts with <code style="background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-family:monospace;">gsk_...</code>).
+          ✅ <strong>100% Free — No billing needed!</strong> Sign up at <a href="https://console.groq.com" target="_blank" style="color:#065f46;font-weight:700;">console.groq.com</a> → API Keys → Create Key. Paste the key below (starts with <code style="background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-family:monospace;">gsk_...</code>).
         </div>
         <div class="frow c2">
           <div class="fg">
             <label>Groq API Key *</label>
-            <input class="fmono" id="cfgGroqKey" type="password" placeholder="gsk_…">
+            <input class="fmono" id="cfgGroqKey" type="password" placeholder="gsk_…"/>
             <div class="hint">Free forever. Stored locally in your browser only.</div>
           </div>
           <div class="fg">
             <label>AI Model</label>
             <select id="cfgGroqModel">
-              <option value="llama-3.3-70b-versatile" selected="">llama-3.3-70b-versatile — Best for medical ⭐</option>
+              <option value="llama-3.3-70b-versatile" selected>llama-3.3-70b-versatile — Best for medical ⭐</option>
               <option value="llama-4-maverick-17b-128e-instruct">llama-4-maverick — Fast + smart</option>
               <option value="llama-4-scout-17b-16e-instruct">llama-4-scout — Ultra fast</option>
               <option value="llama3-8b-8192">llama3-8b — Lightweight</option>
@@ -894,8 +897,8 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     </div>
     <div class="page" id="page-ai">
 
-      <div class="ai-key-warn" id="aiKeyWarn">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+      <div class="ai-key-warn show" id="aiKeyWarn">
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="#" onclick="nav('config')" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="ai-layout">
@@ -929,7 +932,8 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
             </div>
           </div>
           <div class="ai-input-row">
-            <textarea id="aiChatInput" placeholder="Ask about patients, IV protocols, generate reports…" rows="1" onkeydown="if(event.key===&#39;Enter&#39;&amp;&amp;!event.shiftKey){event.preventDefault();sendAiChat();}"></textarea>
+            <textarea id="aiChatInput" placeholder="Ask about patients, IV protocols, generate reports…" rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAiChat();}"></textarea>
             <button class="ai-send-btn" id="aiSendBtn" onclick="sendAiChat()">➤</button>
           </div>
         </div>
@@ -1018,12 +1022,12 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     <div class="page" id="page-health">
 
       <div class="ai-key-warn" id="healthKeyWarn" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:9px;padding:10px 13px;font-size:.73rem;color:#b45309;margin-bottom:14px;">
-        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="file:///C:/Users/G%20M%20HRISHI/Downloads/hospital_dashboard_v6.html#" onclick="nav(&#39;config&#39;)" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
+        ⚠️ <strong>Groq API Key not set.</strong> Go to <a href="#" onclick="nav('config')" style="color:#b45309;font-weight:700;">Configuration</a> → AI Settings and enter your free Groq API key.
       </div>
 
       <div class="sec-hdr" style="margin-bottom:16px;">
         <div>
-          <div class="sec-title">🩺 Patient Vital Signs &amp; AI Health Analysis</div>
+          <div class="sec-title">🩺 Patient Vital Signs & AI Health Analysis</div>
           <div class="sec-sub">Enter Heart Rate, SpO₂ and Temperature for each patient — AI will analyse possible diseases and health risks</div>
         </div>
         <div class="sec-controls">
@@ -1045,7 +1049,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
             <div class="aap-title">AI Health Risk Analysis</div>
             <div class="aap-sub">Powered by Groq · llama-3.3-70b-versatile · Results are indicative only, not a clinical diagnosis</div>
           </div>
-          <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="copyAnalysisReport()" id="btnCopyReport">📋 Copy Report</button>
+          <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="copyAnalysisReport()" id="btnCopyReport" style="display:none;">📋 Copy Report</button>
         </div>
         <div class="aap-loading" id="aapLoading">
           <div class="aap-spinner"></div>
@@ -1104,21 +1108,21 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
         The Device ID must exactly match what your ESP32 uses in its code.
       </div>
       <div class="frow c2">
-        <div class="fg"><label>Patient Full Name *</label><input id="fName" type="text" placeholder="e.g. Ravi Kumar"></div>
-        <div class="fg"><label>Patient ID / MRN</label><input id="fMrn" type="text" placeholder="e.g. MRN-20045"></div>
+        <div class="fg"><label>Patient Full Name *</label><input id="fName" type="text" placeholder="e.g. Ravi Kumar"/></div>
+        <div class="fg"><label>Patient ID / MRN</label><input id="fMrn" type="text" placeholder="e.g. MRN-20045"/></div>
       </div>
       <div class="frow c3">
-        <div class="fg"><label>Ward *</label><input id="fWard" type="text" placeholder="e.g. ICU"></div>
-        <div class="fg"><label>Room / Bed No *</label><input id="fBed" type="text" placeholder="e.g. B-12"></div>
+        <div class="fg"><label>Ward *</label><input id="fWard" type="text" placeholder="e.g. ICU"/></div>
+        <div class="fg"><label>Room / Bed No *</label><input id="fBed" type="text" placeholder="e.g. B-12"/></div>
         <div class="fg"><label>Bag Capacity (mL) *</label>
-          <input id="fCap" type="number" placeholder="e.g. 500" value="500"></div>
+          <input id="fCap" type="number" placeholder="e.g. 500" value="500" /></div>
       </div>
       <div class="frow">
-        <div class="fg"><label>Device ID *</label><input id="fChId" class="fmono" type="text" placeholder="e.g. ESP32-A1 or device_001">
+        <div class="fg"><label>Device ID *</label><input id="fChId" class="fmono" type="text" placeholder="e.g. ESP32-A1 or device_001"/>
           <div class="hint">Must match the DEVICE_ID defined in your ESP32 sketch</div></div>
       </div>
       <div class="frow">
-        <div class="fg"><label>Doctor / Notes</label><input id="fNotes" type="text" placeholder="e.g. Dr. Priya Sharma — Post-op day 2"></div>
+        <div class="fg"><label>Doctor / Notes</label><input id="fNotes" type="text" placeholder="e.g. Dr. Priya Sharma — Post-op day 2"/></div>
       </div>
       <div class="push-status" id="pushStatus"></div>
     </div>
@@ -1129,7 +1133,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div>
   </div><div class="toast" id="toast"></div>
 
-<script src="./hospimanage 6_files/chart.umd.min.js.download"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1704,7 +1708,7 @@ function detStopLiveListener() {
   }
 }
 
-let detChartTimer = null; // 10-second chart/table refresh timer
+let detChartTimer = null;
 
 // Update all live display elements with smooth animation
 // Chart and table are NOT updated here — they update on a 10s timer
@@ -1803,14 +1807,14 @@ async function detLoadHistory() {
     if (!raw) return;
 
     const cap = parseFloat(detPatient.cap) || 1000;
-    const history = Object.values(raw)
+    const vals = Object.values(raw);
+    const history = vals
       .filter(f => f.weight != null && !isNaN(parseFloat(f.weight)))
       .map((f, i) => {
         const rem = Math.min(Math.max(0, kgToMl(parseFloat(f.weight))), cap);
         return {
-          // Use sequence-based time since ESP32 ts is millis() not unix time
           // Space readings 15 seconds apart going back from now
-          time: new Date(Date.now() - (Object.values(raw).length - 1 - i) * 15000),
+          time: new Date(Date.now() - (vals.length - 1 - i) * 15000),
           weightKg: parseFloat(f.weight),
           remaining: rem,
           infused: Math.max(0, cap - rem)
@@ -1821,11 +1825,11 @@ async function detLoadHistory() {
     if (history.length) {
       detReadings = history;
       document.getElementById('dCount').textContent = detReadings.length;
-      // Small delay so canvas is fully rendered before chart draws
+      // Small delay so canvas is fully rendered after page transition
       setTimeout(() => startChartTimer(), 300);
     }
   } catch(e) {
-    // History load failed — live data will populate the chart
+    // History load failed silently — live data will populate the chart
   } finally {
     document.getElementById('dChartLoad').style.display = 'none';
   }
@@ -1860,29 +1864,31 @@ async function detFetchDataRest(){
 }
 
 function detRenderChart(entries, cap){
-  if (!entries.length) return;
+  if (!entries || !entries.length) return;
 
-  const labels   = entries.map(e => e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  const labels    = entries.map(e => e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
   const remaining = entries.map(e => parseFloat(e.remaining.toFixed(2)));
   const infused   = entries.map(e => parseFloat((e.infused ?? Math.max(0, cap - e.remaining)).toFixed(2)));
 
-  // If chart already exists — just update data (much faster, no flicker)
+  // If chart already exists — just update data (no flicker, no destroy)
   if (detChartInst) {
     detChartInst.data.labels              = labels;
     detChartInst.data.datasets[0].data    = remaining;
     detChartInst.data.datasets[1].data    = infused;
     detChartInst.data.datasets[0].pointRadius = entries.length > 30 ? 0 : 3;
     detChartInst.options.scales.y.max     = cap;
-    detChartInst.update('none'); // 'none' = no animation on update, prevents flicker
+    detChartInst.update('none');
     return;
   }
 
   // First time — create the chart
-  const ctx = document.getElementById('dChart').getContext('2d');
-  const g1=ctx.createLinearGradient(0,0,0,220);
-  g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
-  const g2=ctx.createLinearGradient(0,0,0,220);
-  g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+  const canvas = document.getElementById('dChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const g1  = ctx.createLinearGradient(0,0,0,220);
+  g1.addColorStop(0,'rgba(0,212,255,0.28)'); g1.addColorStop(1,'rgba(0,212,255,0)');
+  const g2  = ctx.createLinearGradient(0,0,0,220);
+  g2.addColorStop(0,'rgba(16,232,152,0.2)'); g2.addColorStop(1,'rgba(16,232,152,0)');
 
   detChartInst = new Chart(ctx,{
     type:'line',
@@ -1897,8 +1903,8 @@ function detRenderChart(entries, cap){
       plugins:{
         legend:{labels:{color:'#4a6a80',font:{family:'JetBrains Mono',size:11}}},
         tooltip:{
-          backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,
-          titleColor:'#4a6a80',bodyColor:'#dff0ff',
+          backgroundColor:'#0c1520', borderColor:'#162030', borderWidth:1,
+          titleColor:'#4a6a80', bodyColor:'#dff0ff',
           titleFont:{family:'JetBrains Mono',size:10},
           bodyFont:{family:'JetBrains Mono',size:12},
           callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}
@@ -1914,18 +1920,19 @@ function detRenderChart(entries, cap){
 }
 
 function detRenderTable(entries, cap){
-  if (!entries.length) {
-    document.getElementById('dTBody').innerHTML =
-      '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">No readings yet — connect ESP32 to start logging</td></tr>';
+  const tbody = document.getElementById('dTBody');
+  if (!tbody) return;
+  if (!entries || !entries.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">No readings yet — connect ESP32 to start logging</td></tr>';
     return;
   }
-  const rows=[...entries].reverse().map((e,i)=>{
-    const inf = e.infused ?? Math.max(0, cap - e.remaining); // handle missing infused
-    const pct=((inf/cap)*100).toFixed(1);
-    let cls,lbl;
-    if(e.remaining>cap*0.5){lbl='OK';cls='db-ok';}
-    else if(e.remaining>cap*0.2){lbl='LOW';cls='db-low';}
-    else{lbl='CRITICAL';cls='db-crit';}
+  const rows = [...entries].reverse().map((e,i) => {
+    const inf = e.infused ?? Math.max(0, cap - e.remaining);
+    const pct = ((inf / cap) * 100).toFixed(1);
+    let cls, lbl;
+    if      (e.remaining > cap * 0.5) { lbl = 'OK';       cls = 'db-ok';   }
+    else if (e.remaining > cap * 0.2) { lbl = 'LOW';      cls = 'db-low';  }
+    else                               { lbl = 'CRITICAL'; cls = 'db-crit'; }
     return `<tr>
       <td style="color:#4a6a80">${i+1}</td>
       <td>${e.time.toLocaleString()}</td>
@@ -1935,7 +1942,7 @@ function detRenderTable(entries, cap){
       <td><span class="${cls}">${lbl}</span></td>
     </tr>`;
   });
-  document.getElementById('dTBody').innerHTML = rows.join('');
+  tbody.innerHTML = rows.join('');
 }
 
 function detShowAlert(m){ const e=document.getElementById('detAlert'); e.textContent='⚠ '+m; e.style.display='block'; }
@@ -3039,5 +3046,5 @@ window.setPushStatus        = setPushStatus;
 window.applyGlobalConfigFromFirebase = applyGlobalConfigFromFirebase;
 window.togglePassword       = togglePassword;
 </script>
-
-</div></div></body></html>
+</body>
+</html>
