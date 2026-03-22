@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,6 +322,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   70%  { box-shadow: 0 0 0 10px rgba(0,212,255,0); }
   100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
 }
+@media(max-width:900px){
   .stats-row{grid-template-columns:1fr 1fr;}
 }
 
@@ -1438,13 +1440,23 @@ function startLiveListener(patient) {
   const chId    = patient.chId;
   const cap     = parseFloat(patient.cap) || 1000;
   const rtdbUrl = localStorage.getItem('hm_rtdb_url') || '';
-  if (!rtdbUrl) return;
+
+  // If no RTDB URL set, fall back to REST and show idle status
+  if (!rtdbUrl) {
+    liveData[chId] = { pct: null, remaining: null, rate: 0, ts: null, stale: true, noUrl: true };
+    updateRegistryRow(chId);
+    updateGlobalStats();
+    return;
+  }
 
   // Stop existing listener for this device if any
   stopLiveListener(chId);
 
   const path    = `devices/${chId}/latest`;
   const dbRef   = window._rtdbRef(window._rtdb, path);
+
+  // Per-device previous reading for rate calculation
+  if (!window._prevReading) window._prevReading = {};
 
   const listener = window._rtdbOnValue(dbRef, (snapshot) => {
     const d = snapshot.val();
@@ -1454,11 +1466,24 @@ function startLiveListener(patient) {
     const DEN        = 1.006;
     const remaining  = Math.min(Math.max(0, (weightKg - 0.055) * 1000 / DEN), cap);
     const pct        = Math.min(100, Math.max(0, (remaining / cap) * 100));
-    const ts         = d.ts ? new Date(d.ts) : new Date();
-    const stale      = (Date.now() - ts.getTime()) > 10 * 60 * 1000;
+    const nowTs      = Date.now();
+    const ts         = new Date(nowTs);
+    const stale      = false;
+
+    // Calculate rate from previous reading
+    let rate = 0;
+    const prev = window._prevReading[chId];
+    if (prev) {
+      const dh = (nowTs - prev.ts) / 3600000;
+      if (dh > 0.0001) {
+        rate = Math.max(0, (prev.remaining - remaining) / dh);
+      }
+    }
+    // Store current as previous for next update
+    window._prevReading[chId] = { remaining, ts: nowTs };
 
     // Update liveData immediately
-    liveData[chId] = { pct, remaining, rate: 0, ts, stale };
+    liveData[chId] = { pct, remaining, rate, ts, stale };
     updateGlobalStats();
     updateRegistryRow(chId);
 
@@ -1477,6 +1502,7 @@ function stopLiveListener(chId) {
     window._rtdbOff(window.rtdbListeners[chId].ref);
     delete window.rtdbListeners[chId];
   }
+  if (window._prevReading) delete window._prevReading[chId];
 }
 
 function startAllLiveListeners() {
@@ -2167,6 +2193,7 @@ function getStatus(chId){
 function statusBadge(chId){
   const d=liveData[chId];const st=getStatus(chId);
   if(st==='idle')    return `<span class="badge b-idle">⏳ Fetching…</span>`;
+  if(d?.noUrl)       return `<span class="badge b-warn" title="Go to Configuration → Firebase Realtime DB URL">⚙️ Set RTDB URL</span>`;
   if(st==='offline') return `<span class="badge b-idle">📡 No Data</span>`;
   const cls=st==='crit'?'b-crit':st==='warn'?'b-warn':'b-ok';
   const ico=st==='crit'?'🚨':st==='warn'?'⚠️':'✅';
