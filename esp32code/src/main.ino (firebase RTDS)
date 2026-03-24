@@ -9,11 +9,11 @@ const char* DEVICE_ID = "ESP1";
 const char* RTDB_URL = "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
 // ================= VARIABLES =================
-float D          = 0;      // Weight in kg
-float B          = 420.0;  // Calibration factor
-float C          = 1.0;    // Reference full bag (kg)
-float percentage = 0.0;
-bool  isMuted    = false;
+float D           = 0;          // Weight in kg
+float B           = 287836.24;  // NEW CALIBRATION FACTOR
+float C           = 1.0;        // Reference full bag (kg)
+float percentage  = 0.0;
+bool  isMuted     = false;
 
 // ================= PINS =================
 #define DT         18
@@ -23,8 +23,8 @@ bool  isMuted    = false;
 #define BUZZER      4
 
 // ================= WIFI =================
-const char* ssid     = "Wokwi-GUEST";
-const char* password = "";
+const char* ssid     = "RMK";
+const char* password = "135792468";
 
 HX711 scale;
 
@@ -42,7 +42,7 @@ void setup() {
   Serial.begin(115200);
   delay(2000);
 
-  Serial.println("=== LPG BAG MONITOR BOOTING ===");
+  Serial.println("=== HOSPITAL BAG MONITOR BOOTING ===");
 
   pinMode(LED_GREEN, OUTPUT);
   pinMode(LED_RED,   OUTPUT);
@@ -55,18 +55,18 @@ void setup() {
   // -------- HX711 Setup --------
   Serial.println("[SCALE] Initializing HX711...");
   scale.begin(DT, SCK);
-  delay(2000);
+  delay(1000);
   scale.set_scale(B);
 
+  // CRITICAL: Ensure scale is empty during this 5-second window
   Serial.println("[SCALE] Ensure scale is EMPTY. Taring in 5 seconds...");
   delay(5000);
   scale.tare();
   Serial.println("[SCALE] Tare complete. System Ready.");
 
   // -------- WiFi Setup --------
-  Serial.print("[WIFI]  Connecting to ");
+  Serial.print("[WIFI] Connecting to ");
   Serial.print(ssid);
-  Serial.print(" ");
   WiFi.begin(ssid, password);
 
   int attempts = 0;
@@ -75,18 +75,12 @@ void setup() {
     Serial.print(".");
     attempts++;
     if (attempts > 40) {
-      Serial.println("\n[WIFI]  ❌ Failed to connect. Restarting...");
+      Serial.println("\n[WIFI] ❌ Failed to connect. Restarting...");
       ESP.restart();
     }
   }
 
-  Serial.println();
-  Serial.println("[WIFI]  ✅ Connected!");
-  Serial.print("[WIFI]  IP Address : ");
-  Serial.println(WiFi.localIP());
-  Serial.print("[WIFI]  Signal (RSSI): ");
-  Serial.print(WiFi.RSSI());
-  Serial.println(" dBm");
+  Serial.println("\n[WIFI] ✅ Connected!");
   Serial.println("================================");
 }
 
@@ -97,24 +91,10 @@ int firebaseRequest(const String& path, const String& json, bool usePut) {
   HTTPClient http;
   String url = String(RTDB_URL) + path + ".json";
 
-  Serial.print("[HTTP]  URL : ");
-  Serial.println(url);
-  Serial.print("[HTTP]  Payload : ");
-  Serial.println(json);
-
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
 
   int code = usePut ? http.PUT(json) : http.POST(json);
-
-  if (code < 0) {
-    Serial.print("[HTTP]  ❌ Error: ");
-    Serial.println(http.errorToString(code));
-  } else {
-    Serial.print("[HTTP]  Response Code: ");
-    Serial.println(code);
-  }
-
   http.end();
   return code;
 }
@@ -124,25 +104,18 @@ void loop() {
 
   // -------- WiFi Watchdog --------
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[WIFI]  ⚠️  Connection lost! Reconnecting...");
-    WiFi.disconnect();
     WiFi.begin(ssid, password);
-    int wait = 0;
-    while (WiFi.status() != WL_CONNECTED && wait < 20) {
-      delay(500);
-      Serial.print(".");
-      wait++;
-    }
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("\n[WIFI]  ✅ Reconnected!");
-    } else {
-      Serial.println("\n[WIFI]  ❌ Reconnect failed. Will retry next loop.");
-    }
   }
 
   // -------- Read Weight --------
   if (scale.is_ready()) {
-    D = max(0.0f, scale.get_units(20));
+    // Increased to 30 samples to filter out the noise from your screenshots
+    float rawRead = scale.get_units(30); 
+    D = max(0.0f, rawRead); 
+    
+    // Calculate percentage based on 1.0kg full bag
+    percentage = (D / C) * 100.0;
+    
     Serial.println("----------------------------------");
     Serial.print("[SCALE] Weight     : ");
     Serial.print(D, 3);
@@ -150,35 +123,34 @@ void loop() {
     Serial.print("[SCALE] Percentage : ");
     Serial.print(percentage, 1);
     Serial.println(" %");
-  } else {
-    Serial.println("[SCALE] ⚠️  HX711 not ready, skipping read.");
   }
 
-  percentage = (D / C) * 100.0;
-
-  // -------- Status Indicator --------
+  // -------- Status Indicator Logic --------
   if (D >= 1.0) {
-    Serial.println("[STATUS] 🟢 NORMAL");
+    // NORMAL
     digitalWrite(LED_GREEN, HIGH);
     digitalWrite(LED_RED,   LOW);
     noTone(BUZZER);
     isMuted = false;
   }
   else if (D >= 0.5) {
-    Serial.println("[STATUS] 🟡 LOW");
+    // LOW
     digitalWrite(LED_GREEN, LOW);
     digitalWrite(LED_RED,   HIGH);
     noTone(BUZZER);
   }
   else {
-    Serial.println("[STATUS] 🔴 CRITICAL — Buzzer active!");
+    // CRITICAL
     digitalWrite(LED_GREEN, LOW);
+    
+    // Non-blocking Red LED Blink
     unsigned long currentMillis = millis();
     if (currentMillis - previousBlink >= blinkInterval) {
       previousBlink = currentMillis;
-      redState      = !redState;
+      redState = !redState;
       digitalWrite(LED_RED, redState);
     }
+    
     if (!isMuted) tone(BUZZER, 1000);
   }
 
@@ -187,33 +159,21 @@ void loop() {
   if (WiFi.status() == WL_CONNECTED && (now - lastUpload >= UPLOAD_INTERVAL)) {
     lastUpload = now;
 
-    Serial.println("[FIREBASE] Uploading...");
-
     String json = "{\"weight\":"     + String(D, 3) +
                   ",\"percentage\":" + String(percentage, 1) +
                   ",\"ts\":"         + String(now) +
                   "}";
 
-    // PUT → /devices/ESP1/latest (always overwrites current reading)
-    String latestPath = "/devices/" + String(DEVICE_ID) + "/latest";
-    int code1 = firebaseRequest(latestPath, json, true);
-    if (code1 == 200) {
-      Serial.println("[FIREBASE] ✅ latest updated.");
-    } else {
-      Serial.print("[FIREBASE] ❌ latest failed. Code: ");
-      Serial.println(code1);
-    }
+    // Update Latest Reading
+    String latestPath = "devices/" + String(DEVICE_ID) + "/latest";
+    int res1 = firebaseRequest(latestPath, json, true);
 
-    // POST → /devices/ESP1/readings (appends history entry)
-    String readingsPath = "/devices/" + String(DEVICE_ID) + "/readings";
-    int code2 = firebaseRequest(readingsPath, json, false);
-    if (code2 == 200) {
-      Serial.println("[FIREBASE] ✅ reading logged.");
-    } else {
-      Serial.print("[FIREBASE] ❌ reading log failed. Code: ");
-      Serial.println(code2);
-    }
+    // Append to History (Log)
+    String readingsPath = "devices/" + String(DEVICE_ID) + "/readings";
+    int res2 = firebaseRequest(readingsPath, json, false);
+    
+    if(res1 > 0) Serial.println("[FIREBASE] Data Synced Successfully.");
   }
 
-  delay(100);
+  delay(50); 
 }
