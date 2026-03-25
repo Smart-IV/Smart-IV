@@ -1,0 +1,179 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include "HX711.h"
+
+// ================= DEVICE IDENTITY =================
+const char* DEVICE_ID = "ESP1";
+
+// ================= FIREBASE REALTIME DATABASE =================
+const char* RTDB_URL = "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app/";
+
+// ================= VARIABLES =================
+float D           = 0;          // Weight in kg
+float B           = 287836.24;  // NEW CALIBRATION FACTOR
+float C           = 1.0;        // Reference full bag (kg)
+float percentage  = 0.0;
+bool  isMuted     = false;
+
+// ================= PINS =================
+#define DT         18
+#define SCK        19
+#define LED_GREEN  15
+#define LED_RED     2
+#define BUZZER      4
+
+// ================= WIFI =================
+const char* ssid     = "RMK";
+const char* password = "135792468";
+
+HX711 scale;
+
+// ===== Blink Control (Non-blocking) =====
+unsigned long previousBlink = 0;
+const int     blinkInterval = 300;
+bool          redState      = false;
+
+// ===== Upload Interval =================
+const unsigned long UPLOAD_INTERVAL = 5000;  // 5 seconds
+unsigned long lastUpload = 0;
+
+// =========================================================
+void setup() {
+  Serial.begin(115200);
+  delay(2000);
+
+  Serial.println("=== HOSPITAL BAG MONITOR BOOTING ===");
+
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED,   OUTPUT);
+  pinMode(BUZZER,    OUTPUT);
+
+  digitalWrite(LED_GREEN, LOW);
+  digitalWrite(LED_RED,   LOW);
+  noTone(BUZZER);
+
+  // -------- HX711 Setup --------
+  Serial.println("[SCALE] Initializing HX711...");
+  scale.begin(DT, SCK);
+  delay(1000);
+  scale.set_scale(B);
+
+  // CRITICAL: Ensure scale is empty during this 5-second window
+  Serial.println("[SCALE] Ensure scale is EMPTY. Taring in 5 seconds...");
+  delay(5000);
+  scale.tare();
+  Serial.println("[SCALE] Tare complete. System Ready.");
+
+  // -------- WiFi Setup --------
+  Serial.print("[WIFI] Connecting to ");
+  Serial.print(ssid);
+  WiFi.begin(ssid, password);
+
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+    if (attempts > 40) {
+      Serial.println("\n[WIFI] ❌ Failed to connect. Restarting...");
+      ESP.restart();
+    }
+  }
+
+  Serial.println("\n[WIFI] ✅ Connected!");
+  Serial.println("================================");
+}
+
+// =========================================================
+//  Helper — PUT or POST to Firebase RTDB
+// =========================================================
+int firebaseRequest(const String& path, const String& json, bool usePut) {
+  HTTPClient http;
+  String url = String(RTDB_URL) + path + ".json";
+
+  http.begin(url);
+  http.addHeader("Content-Type", "application/json");
+
+  int code = usePut ? http.PUT(json) : http.POST(json);
+  http.end();
+  return code;
+}
+
+// =========================================================
+void loop() {
+
+  // -------- WiFi Watchdog --------
+  if (WiFi.status() != WL_CONNECTED) {
+    WiFi.begin(ssid, password);
+  }
+
+  // -------- Read Weight --------
+  if (scale.is_ready()) {
+    // Increased to 30 samples to filter out the noise from your screenshots
+    float rawRead = scale.get_units(30); 
+    D = max(0.0f, rawRead); 
+    
+    // Calculate percentage based on 1.0kg full bag
+    percentage = (D / C) * 100.0;
+    
+    Serial.println("----------------------------------");
+    Serial.print("[SCALE] Weight     : ");
+    Serial.print(D, 3);
+    Serial.println(" kg");
+    Serial.print("[SCALE] Percentage : ");
+    Serial.print(percentage, 1);
+    Serial.println(" %");
+  }
+
+  // -------- Status Indicator Logic --------
+  if (D >= 1.0) {
+    // NORMAL
+    digitalWrite(LED_GREEN, HIGH);
+    digitalWrite(LED_RED,   LOW);
+    noTone(BUZZER);
+    isMuted = false;
+  }
+  else if (D >= 0.5) {
+    // LOW
+    digitalWrite(LED_GREEN, LOW);
+    digitalWrite(LED_RED,   HIGH);
+    noTone(BUZZER);
+  }
+  else {
+    // CRITICAL
+    digitalWrite(LED_GREEN, LOW);
+    
+    // Non-blocking Red LED Blink
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousBlink >= blinkInterval) {
+      previousBlink = currentMillis;
+      redState = !redState;
+      digitalWrite(LED_RED, redState);
+    }
+    
+    if (!isMuted) tone(BUZZER, 1000);
+  }
+
+  // -------- Firebase Upload --------
+  unsigned long now = millis();
+  if (WiFi.status() == WL_CONNECTED && (now - lastUpload >= UPLOAD_INTERVAL)) {
+    lastUpload = now;
+
+    String json = "{\"weight\":"     + String(D, 3) +
+                  ",\"percentage\":" + String(percentage, 1) +
+                  ",\"ts\":"         + String(now) +
+                  "}";
+
+    // Update Latest Reading
+    String latestPath = "devices/" + String(DEVICE_ID) + "/latest";
+    int res1 = firebaseRequest(latestPath, json, true);
+
+    // Append to History (Log)
+    String readingsPath = "devices/" + String(DEVICE_ID) + "/readings";
+    int res2 = firebaseRequest(readingsPath, json, false);
+    
+    if(res1 > 0) Serial.println("[FIREBASE] Data Synced Successfully.");
+  }
+
+  delay(50); 
+}

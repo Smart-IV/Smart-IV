@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -296,8 +297,32 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 .db-low{background:rgba(245,197,24,.12);color:#f5c518;display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
 .db-crit{background:rgba(255,77,109,.12);color:#ff4d6d;display:inline-block;padding:2px 8px;border-radius:999px;font-size:.63rem;font-weight:600;}
 
+/* Smooth value transitions for live updates */
+.dhc-val, .dstat-val {
+  transition: color 0.4s ease;
+}
+.dhc-val.updating {
+  opacity: 0.6;
+  transform: scale(0.97);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.dhc-val.updated {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.dprog-fill {
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.live-pulse {
+  animation: livepulse 1s ease-out;
+}
+@keyframes livepulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,212,255,0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(0,212,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,212,255,0); }
+}
 @media(max-width:900px){
-  .sidebar{display:none;}
   .stats-row{grid-template-columns:1fr 1fr;}
 }
 
@@ -508,6 +533,18 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 .forgot-view{display:none;}
 .forgot-view.show{display:block;}
 .login-view.hide{display:none;}
+
+/* Show password toggle */
+.pw-wrap{position:relative;display:flex;align-items:center;}
+.pw-wrap input{padding-right:42px !important;}
+.pw-toggle{
+  position:absolute;right:12px;
+  background:none;border:none;cursor:pointer;
+  color:#475569;font-size:1rem;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:color .15s;
+}
+.pw-toggle:hover{color:#0ea5e9;}
 </style>
 </head>
 <body>
@@ -535,8 +572,11 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       </div>
       <div class="login-fg">
         <label>Password</label>
-        <input type="password" id="loginPass" placeholder="••••••••"
-          onkeydown="if(event.key==='Enter') doLogin()"/>
+        <div class="pw-wrap">
+          <input type="password" id="loginPass" placeholder="••••••••"
+            onkeydown="if(event.key==='Enter') doLogin()"/>
+          <button class="pw-toggle" type="button" onclick="togglePassword()" id="pwToggleBtn" title="Show/Hide Password">👁️</button>
+        </div>
       </div>
 
       <button class="login-btn" id="loginBtn" onclick="doLogin()">
@@ -612,7 +652,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Patient Name</th><th>Ward</th><th>Room/Bed</th><th>Channel ID</th><th>Bag Cap</th><th>Fluid Status</th><th>Last Pushed</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Patient Name</th><th>Ward</th><th>Room/Bed</th><th>Device ID</th><th>Bag Cap</th><th>Fluid Status</th><th>Last Saved</th><th>Actions</th></tr></thead>
           <tbody id="regTbody"></tbody>
         </table>
       </div>
@@ -676,7 +716,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
         <div class="stat-card"><div class="stat-icon">🏥</div><div class="stat-val c-purple" id="dvWards">0</div><div class="stat-lbl">Wards Covered</div></div>
       </div>
       <div class="sec-hdr">
-        <div><div class="sec-title">Device Registry</div><div class="sec-sub">All ESP32 devices with ThingSpeak credentials</div></div>
+        <div><div class="sec-title">Device Registry</div><div class="sec-sub">All ESP32 devices with Firebase Realtime Database credentials</div></div>
         <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Device</button>
       </div>
       <div class="device-grid" id="deviceGrid"></div>
@@ -714,7 +754,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
       <div class="cfg-panel">
         <div class="cfg-panel-title">⚙️ Global Configuration</div>
         <div class="frow c2">
-          <div class="fg"><label>Default Write API Key</label><input class="fmono" id="cfgWriteKey" type="text" placeholder="ThingSpeak Write API Key"/><div class="hint">Pre-filled when assigning patients.</div></div>
+          <div class="fg"><label>Firebase Realtime DB URL</label><input class="fmono" id="cfgRtdbUrl" type="text" placeholder="https://your-project-default-rtdb.firebaseio.com"/><div class="hint">Pre-filled for all device reads. Found in Firebase Console → Realtime Database.</div></div>
           <div class="fg"><label>Admin Name</label><input id="cfgAdminName" type="text" placeholder="e.g. Head Nurse Priya"/></div>
         </div>
         <div class="frow c2">
@@ -763,18 +803,17 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
         </div>
       </div>
       <div class="cfg-panel">
-        <div class="cfg-panel-title">📋 ThingSpeak Field Reference</div>
+        <div class="cfg-panel-title">📋 Firebase Realtime Database Path Reference</div>
         <div class="table-wrap" style="margin-bottom:0;">
-          <table><thead><tr><th>Field</th><th>Data</th><th>Written By</th><th>Read By</th></tr></thead>
+          <table><thead><tr><th>Path</th><th>Data</th><th>Written By</th><th>Read By</th></tr></thead>
           <tbody>
-            <tr><td><span class="badge b-idle">Field 1</span></td><td>Weight (kg)</td><td>ESP32</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-idle">Field 2</span></td><td>Remaining (mL)</td><td>ESP32</td><td>Nurse app · Dashboard</td></tr>
-            <tr><td><span class="badge b-idle">Field 3</span></td><td>Infused (mL)</td><td>ESP32</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-idle">Field 4</span></td><td>Rate (mL/hr)</td><td>ESP32</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-ok">Field 5</span></td><td>Patient Name</td><td>This dashboard</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-ok">Field 6</span></td><td>Ward Name</td><td>This dashboard</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-ok">Field 7</span></td><td>Room / Bed No</td><td>This dashboard</td><td>Nurse app</td></tr>
-            <tr><td><span class="badge b-ok">Field 8</span></td><td>Bag Capacity (mL)</td><td>This dashboard</td><td>Nurse app</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/weight</span></td><td>Weight (kg)</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/percentage</span></td><td>Bag % remaining</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/latest/ts</span></td><td>Timestamp (ms)</td><td>ESP32</td><td>Dashboard</td></tr>
+            <tr><td><span class="badge b-idle">devices/{id}/readings/{pushKey}</span></td><td>History entries</td><td>ESP32</td><td>Detail page chart</td></tr>
+            <tr><td><span class="badge b-ok">patients/{chId}</span></td><td>Patient metadata</td><td>Dashboard</td><td>All pages</td></tr>
+            <tr><td><span class="badge b-ok">ai_health_analysis/{id}</span></td><td>AI health reports</td><td>Dashboard</td><td>Health page</td></tr>
+            <tr><td><span class="badge b-ok">ai_shift_reports/{id}</span></td><td>Shift reports</td><td>Dashboard</td><td>AI page</td></tr>
           </tbody></table>
         </div>
       </div>
@@ -799,11 +838,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
             </div>
           </div>
           <div class="det-right">
-            <div class="dtog-wrap">
-              <label class="dtog"><input type="checkbox" id="dAutoRefresh" checked><span class="dtslider"></span></label>
-              Auto-refresh <span id="dcd">5</span>s
-            </div>
-            <div class="dpill"><div class="ddot off" id="dStatusDot"></div><span id="dStatusTxt">Waiting…</span></div>
+            <div class="dpill"><div class="ddot off" id="dStatusDot"></div><span id="dStatusTxt">Connecting…</span></div>
           </div>
         </div>
 
@@ -856,7 +891,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
           <div class="dcard-hdr"><div class="dcard-title">🗃 Readings Log</div></div>
           <table class="det-tbl">
             <thead><tr><th>#</th><th>Timestamp</th><th>Weight (kg)</th><th>Remaining (mL)</th><th>Infused (mL)</th><th>Status</th></tr></thead>
-            <tbody id="dTBody"><tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Loading data from ThingSpeak…</td></tr></tbody>
+            <tbody id="dTBody"><tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Loading data from Firebase…</td></tr></tbody>
           </table>
         </div>
 
@@ -1065,14 +1100,14 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   <div class="modal">
     <div class="modal-hdr">
       <div><div class="modal-title" id="modalTitle">Assign Patient to Device</div>
-        <div class="modal-sub">Patient info pushed to ThingSpeak Fields 5–8</div></div>
+        <div class="modal-sub">Patient info saved to Firebase Firestore · device reads from Realtime DB</div></div>
       <div class="modal-x" onclick="closeModal()">✕</div>
     </div>
     <div class="modal-body">
       <div class="info-box">
-        <strong>📡 ThingSpeak Field Mapping</strong>
-        <code>Field 5</code> Patient Name &nbsp;·&nbsp; <code>Field 6</code> Ward &nbsp;·&nbsp;
-        <code>Field 7</code> Room/Bed &nbsp;·&nbsp; <code>Field 8</code> Bag Capacity
+        <strong>🔥 Firebase Realtime DB Path</strong>
+        Device data is read from <code>devices/{Device ID}/latest</code> and <code>devices/{Device ID}/readings</code><br>
+        The Device ID must exactly match what your ESP32 uses in its code.
       </div>
       <div class="frow c2">
         <div class="fg"><label>Patient Full Name *</label><input id="fName" type="text" placeholder="e.g. Ravi Kumar"/></div>
@@ -1084,14 +1119,9 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
         <div class="fg"><label>Bag Capacity (mL) *</label>
           <input id="fCap" type="number" placeholder="e.g. 500" value="500" /></div>
       </div>
-      <div class="frow c2">
-        <div class="fg"><label>Channel ID *</label><input id="fChId" class="fmono" type="number" placeholder="e.g. 2345678"/>
-          <div class="hint">From ThingSpeak channel URL</div></div>
-        <div class="fg"><label>Write API Key *</label><input id="fWriteKey" class="fmono" type="text" placeholder="XXXXXXXXXXXXXXXX"/>
-          <div class="hint">ThingSpeak → API Keys tab</div></div>
-      </div>
       <div class="frow">
-        <div class="fg"><label>Read API Key</label><input id="fReadKey" class="fmono" type="text" placeholder="For private channels (optional)"/></div>
+        <div class="fg"><label>Device ID *</label><input id="fChId" class="fmono" type="text" placeholder="e.g. ESP32-A1 or device_001"/>
+          <div class="hint">Must match the DEVICE_ID defined in your ESP32 sketch</div></div>
       </div>
       <div class="frow">
         <div class="fg"><label>Doctor / Notes</label><input id="fNotes" type="text" placeholder="e.g. Dr. Priya Sharma — Post-op day 2"/></div>
@@ -1100,7 +1130,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
     </div>
     <div class="modal-foot">
       <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" id="pushBtn" onclick="pushPatient()">📤 Push to ThingSpeak</button>
+      <button class="btn btn-primary" id="pushBtn" onclick="pushPatient()">💾 Save Patient</button>
     </div>
   </div>
   </div><div class="toast" id="toast"></div>
@@ -1108,7 +1138,8 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase, ref, onValue, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // ═══════════════════════════════════════════════════════════════
 // NURSE ACCOUNTS — Add / edit nurses here
@@ -1131,17 +1162,26 @@ const HARDCODED_CONFIG = {
   storageBucket: "hospital-dashboard-d5d1b.firebasestorage.app",
   messagingSenderId: "202596574387",
   appId: "1:202596574387:web:e2da34eaccc3ff93f8bcc6",
+  databaseURL: "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app",
 };
 const FIREBASE_CONFIG = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null') || HARDCODED_CONFIG;
 
-let db = null;
+let db   = null;
+let rtdb = null; // Firebase Realtime Database instance
 let unsubscribe = null;
+window.rtdbListeners = {}; // Track active RTDB listeners — on window so regular script can access
 
 function initFirebase(config) {
   try {
     const app = getApps().length ? getApp() : initializeApp(config);
-    db = getFirestore(app);
+    db   = getFirestore(app);
+    rtdb = getDatabase(app);
     document.getElementById('fbSetupBanner').style.display = 'none';
+    // Expose rtdb instance so live listener can use it
+    window._rtdb = rtdb;
+    window._rtdbRef = ref;
+    window._rtdbOnValue = onValue;
+    window._rtdbOff = off;
     return true;
   } catch(e) {
     console.error('Firebase init error:', e);
@@ -1154,7 +1194,13 @@ function listenToPatients() {
   unsubscribe = onSnapshot(collection(db, 'patients'), (snapshot) => {
     patients = snapshot.docs.map(d => ({ _id: d.id, ...d.data() }));
     renderRegistry(); renderOverview(); renderAlerts(); renderWards(); renderDevices(); updateGlobalStats();
-    if (patients.length) refreshAllStatus();
+    if (patients.length) {
+      refreshAllStatus();
+      // Start real-time RTDB listeners for live IV level updates
+      setTimeout(() => {
+        if (window.startAllLiveListeners) window.startAllLiveListeners();
+      }, 1000);
+    }
   });
 }
 
@@ -1220,6 +1266,25 @@ window.saveFirebaseConfig = function() {
 window._firebaseReady = () => !!db;
 
 // ═══════════════════════════════════════════════════════════════
+// GLOBAL CONFIG SYNC — Saves Groq key + settings to Firestore
+// so ALL devices/PCs share the same configuration automatically
+// ═══════════════════════════════════════════════════════════════
+window.fbSaveGlobalConfig = async function(data) {
+  if (!db) return;
+  try {
+    await setDoc(doc(db, 'app_config', 'global'), data, { merge: true });
+  } catch(e) { console.error('fbSaveGlobalConfig error:', e); }
+};
+
+window.fbLoadGlobalConfig = async function() {
+  if (!db) return null;
+  try {
+    const snap = await getDoc(doc(db, 'app_config', 'global'));
+    return snap.exists() ? snap.data() : null;
+  } catch(e) { console.error('fbLoadGlobalConfig error:', e); return null; }
+};
+
+// ═══════════════════════════════════════════════════════════════
 // AUTH — Nurse ID + Password (no Firebase Auth needed)
 // ═══════════════════════════════════════════════════════════════
 
@@ -1251,6 +1316,13 @@ function showDashboard(nurse) {
   localStorage.setItem('hm_logged_nurse', nurse.name);
   startInactivityTimer();
   listenToPatients();
+  // ── Load shared config (Groq key, RTDB URL, etc.) from Firebase
+  //    so the settings are the same on every device/PC automatically
+  setTimeout(async () => {
+    if (window.applyGlobalConfigFromFirebase) {
+      await window.applyGlobalConfigFromFirebase();
+    }
+  }, 800); // small delay so Firestore db is ready
   if (typeof showToast === 'function') showToast('✅ Welcome, ' + nurse.name + '!', 'success');
 }
 
@@ -1341,6 +1413,107 @@ window.resetInactivityTimer = startInactivityTimer;
 
 <script>
 // ═══════════════════════════════════════════════════════════════
+// SHOW / HIDE PASSWORD
+// ═══════════════════════════════════════════════════════════════
+function togglePassword() {
+  const input = document.getElementById('loginPass');
+  const btn   = document.getElementById('pwToggleBtn');
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+    btn.title = 'Hide Password';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁️';
+    btn.title = 'Show Password';
+  }
+}
+window.togglePassword = togglePassword;
+
+// ═══════════════════════════════════════════════════════════════
+// LIVE FIREBASE RTDB LISTENER
+// Attaches a real-time listener to a patient's RTDB latest node
+// so the registry/overview update INSTANTLY when ESP32 pushes data
+// ═══════════════════════════════════════════════════════════════
+function startLiveListener(patient) {
+  if (!window._rtdb || !patient.chId) return;
+  const chId    = patient.chId;
+  const cap     = parseFloat(patient.cap) || 1000;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url') || '';
+
+  // If no RTDB URL set, fall back to REST and show idle status
+  if (!rtdbUrl) {
+    liveData[chId] = { pct: null, remaining: null, rate: 0, ts: null, stale: true, noUrl: true };
+    updateRegistryRow(chId);
+    updateGlobalStats();
+    return;
+  }
+
+  // Stop existing listener for this device if any
+  stopLiveListener(chId);
+
+  const path    = `devices/${chId}/latest`;
+  const dbRef   = window._rtdbRef(window._rtdb, path);
+
+  // Per-device previous reading for rate calculation
+  if (!window._prevReading) window._prevReading = {};
+
+  const listener = window._rtdbOnValue(dbRef, (snapshot) => {
+    const d = snapshot.val();
+    if (!d || d.weight == null) return;
+
+    const weightKg   = parseFloat(d.weight) || 0;
+    const DEN        = 1.006;
+    const remaining  = Math.min(Math.max(0, (weightKg - 0.055) * 1000 / DEN), cap);
+    const pct        = Math.min(100, Math.max(0, (remaining / cap) * 100));
+    const nowTs      = Date.now();
+    const ts         = new Date(nowTs);
+    const stale      = false;
+
+    // Calculate rate from previous reading
+    let rate = 0;
+    const prev = window._prevReading[chId];
+    if (prev) {
+      const dh = (nowTs - prev.ts) / 3600000;
+      if (dh > 0.0001) {
+        rate = Math.max(0, (prev.remaining - remaining) / dh);
+      }
+    }
+    // Store current as previous for next update
+    window._prevReading[chId] = { remaining, ts: nowTs };
+
+    // Update liveData immediately
+    liveData[chId] = { pct, remaining, rate, ts, stale };
+    updateGlobalStats();
+    updateRegistryRow(chId);
+
+    // Re-render active page
+    const activePage = document.querySelector('.page.active')?.id?.replace('page-', '');
+    if (activePage === 'overview') renderOverview();
+    if (activePage === 'alerts')   renderAlerts();
+    if (activePage === 'wards')    renderWards();
+  });
+
+  window.rtdbListeners[chId] = { ref: dbRef, listener };
+}
+
+function stopLiveListener(chId) {
+  if (window.rtdbListeners[chId]) {
+    window._rtdbOff(window.rtdbListeners[chId].ref);
+    delete window.rtdbListeners[chId];
+  }
+  if (window._prevReading) delete window._prevReading[chId];
+}
+
+function startAllLiveListeners() {
+  patients.forEach(p => startLiveListener(p));
+}
+
+window.startLiveListener    = startLiveListener;
+window.stopLiveListener     = stopLiveListener;
+window.startAllLiveListeners = startAllLiveListeners;
+
+// ═══════════════════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════════════════
 let patients         = JSON.parse(localStorage.getItem('hm_patients') || '[]');
@@ -1350,11 +1523,46 @@ let autoRefreshTimer = null;
 let prevPage         = 'registry';
 
 // ─── Patient Detail state ────────────────────────────────────
-let detPatient   = null;   // currently viewed patient object
-let detChartInst = null;
-let detCdVal     = 5;
-let detCdTimer   = null;
-let detAutoOn    = true;
+let detPatient      = null;
+let detChartInst    = null;
+let detRtdbListener = null;   // Active RTDB onValue listener
+let detReadings     = [];     // Rolling buffer of last 30 readings
+let detPrevVal      = null;   // Previous remaining value for rate calculation
+let detPrevTs       = null;   // Previous timestamp for rate calculation
+
+// ═══════════════════════════════════════════════════════════════
+// GLOBAL CONFIG SYNC — Apply Firebase config to this device
+// Called on every login so all PCs stay in sync automatically
+// ═══════════════════════════════════════════════════════════════
+window.applyGlobalConfigFromFirebase = async function() {
+  if (!window.fbLoadGlobalConfig) return;
+  const cfg = await window.fbLoadGlobalConfig();
+  if (!cfg) return;
+
+  let changed = false;
+
+  // ── Apply Global Configuration fields ──
+  if (cfg.rtdbUrl   !== undefined) { localStorage.setItem('hm_rtdb_url',   cfg.rtdbUrl);   changed = true; }
+  if (cfg.adminName !== undefined) { localStorage.setItem('hm_admin_name', cfg.adminName); changed = true; }
+  if (cfg.hospital  !== undefined) { localStorage.setItem('hm_hospital',   cfg.hospital);  changed = true; }
+  if (cfg.refresh   !== undefined) { localStorage.setItem('hm_refresh',    cfg.refresh);   changed = true; }
+
+  // ── Apply Groq AI settings ──
+  if (cfg.groqKey   !== undefined) { localStorage.setItem('hm_groq_key',   cfg.groqKey);   changed = true; }
+  if (cfg.groqModel !== undefined) { localStorage.setItem('hm_groq_model', cfg.groqModel); changed = true; }
+
+  if (!changed) return;
+
+  // Refresh the Config page UI fields
+  loadConfig();
+  const kEl = document.getElementById('cfgGroqKey');
+  const mEl = document.getElementById('cfgGroqModel');
+  if (kEl && cfg.groqKey)   kEl.value = cfg.groqKey;
+  if (mEl && cfg.groqModel) mEl.value = cfg.groqModel;
+  updateAiKeyWarning();
+  startAutoRefresh();
+  // Silently synced — no toast needed
+};
 
 // ═══════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -1364,9 +1572,9 @@ const PAGE_META = {
   overview:{ title:'Live Overview',          sub:'Click any card to open the full live monitor for that patient', showRefresh:true,  btn:'🔄 Refresh Now',   btnFn:'refreshAllStatus' },
   alerts:  { title:'Alerts',                sub:'Patients requiring attention · click name to open monitor',   showRefresh:true,  btn:'🔄 Refresh Now',   btnFn:'refreshAllStatus' },
   wards:   { title:'Ward Management',       sub:'Expand a ward · click patient name to open live monitor',     showRefresh:true,  btn:'+ Assign Patient', btnFn:'openAddModal' },
-  devices: { title:'Devices',               sub:'All ESP32 devices with ThingSpeak credentials',               showRefresh:false, btn:'+ Add Device',     btnFn:'openAddModal' },
-  config:  { title:'Configuration',         sub:'Global settings and data management',                          showRefresh:false, btn:null,               btnFn:null },
-  detail:  { title:'Patient Live Monitor',  sub:'Real-time IV fluid data from ThingSpeak',                     showRefresh:false, btn:'← Back',           btnFn:'closeDetail' },
+  devices: { title:'Devices',               sub:'All ESP32 devices with Firebase Realtime Database credentials',  showRefresh:false, btn:'+ Add Device',     btnFn:'openAddModal' },
+  config:  { title:'Configuration',         sub:'Global settings and data management',                            showRefresh:false, btn:null,               btnFn:null },
+  detail:  { title:'Patient Live Monitor',  sub:'Real-time IV fluid data from Firebase',                          showRefresh:false, btn:'← Back',           btnFn:'closeDetail' },
   ai:      { title:'AI Assistant',          sub:'Groq-powered assistant for patient summaries and reports',     showRefresh:false, btn:null,               btnFn:null },
   health:  { title:'Health Analysis',       sub:'Enter vital signs — AI analyses possible diseases and health risks', showRefresh:false, btn:'🧠 Analyse All', btnFn:'runHealthAnalysis' },
 };
@@ -1408,7 +1616,7 @@ function openDetail(patientIdx){
   document.getElementById('detWard').textContent  = detPatient.ward || '—';
   document.getElementById('detBed').textContent   = detPatient.bed  || '—';
   document.getElementById('detMrn').textContent   = detPatient.mrn  || 'No MRN';
-  document.getElementById('detCap').textContent   = detPatient.cap  || '500';
+  document.getElementById('detCap').textContent   = detPatient.cap  || '1000';
   const notesEl = document.getElementById('detNotesSpan');
   notesEl.textContent = detPatient.notes ? '📋 '+detPatient.notes : '';
 
@@ -1418,167 +1626,349 @@ function openDetail(patientIdx){
   document.getElementById('dStatusTxt').textContent = 'Connecting…';
   document.getElementById('dChartLoad').style.display = 'none';
   document.getElementById('dTBody').innerHTML =
-    '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Fetching data…</td></tr>';
+    '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">Waiting for live data…</td></tr>';
   ['dRemaining','dInfused','dRate','dProgPct','dWeight','dAvgRate','dMin','dMax','dCount'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.innerHTML='—';
   });
   document.getElementById('dProgFill').style.width='0%';
   document.getElementById('dProgMid').textContent='—';
   document.getElementById('dETA').textContent='ETA: —';
-  document.getElementById('dRemainingTs').textContent='Waiting for data…';
+  document.getElementById('dRemainingTs').textContent='Waiting for live data…';
   document.getElementById('dInfusedPct').textContent='— % completed';
   document.getElementById('dProgMax').textContent='— mL';
 
-  // Setup auto-refresh toggle
-  const tog = document.getElementById('dAutoRefresh');
-  tog.checked = true; detAutoOn = true;
-  tog.onchange = function(){ detAutoOn=this.checked; if(detAutoOn) startDetCD(); else stopDetCD(); };
+  // Reset readings buffer and rate state
+  detReadings = [];
+  detPrevVal  = null;
+  detPrevTs   = null;
 
   nav('detail');
-  detFetchData();
-  startDetCD();
+
+  // Load history first (for chart and table), then start live listener
+  detLoadHistory();
+  detStartLiveListener();
 }
 
 function closeDetail(){
-  stopDetCD();
+  detStopLiveListener();
+  stopChartTimer();
   if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
+  detReadings = [];
   nav(prevPage);
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DETAIL PAGE — FETCH & RENDER
+// DETAIL PAGE — REAL-TIME FIREBASE RTDB LISTENER
 // ═══════════════════════════════════════════════════════════════
 const DEN = 1.006;
 function kgToMl(kg){ return Math.max(0, (kg - 0.055)*1000/DEN); }
 function fmtH(h){ return h<1 ? Math.round(h*60)+' min' : h.toFixed(1)+' hr'; }
 
-async function detFetchData(){
+// Smooth animated number counter
+function animateValue(elementId, newVal, decimals, suffix) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  const current = parseFloat(el.dataset.rawVal) || 0;
+  const start   = current;
+  const end     = newVal;
+  const duration = 800; // ms
+  const startTime = performance.now();
+
+  function update(now) {
+    const elapsed  = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    // Ease out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value  = start + (end - start) * eased;
+    el.dataset.rawVal = value;
+    el.innerHTML = value.toFixed(decimals) + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+// Start real-time RTDB listener for the detail page
+function detStartLiveListener() {
+  detStopLiveListener();
+  if (!window._rtdb || !detPatient?.chId) {
+    // Fallback to REST polling if RTDB not ready
+    detFetchDataRest();
+    return;
+  }
+  const path  = `devices/${detPatient.chId}/latest`;
+  const dbRef = window._rtdbRef(window._rtdb, path);
+
+  detRtdbListener = window._rtdbOnValue(dbRef, (snapshot) => {
+    const d = snapshot.val();
+    if (!d || d.weight == null) {
+      detShowAlert('No data yet. Ensure ESP32 is running and connected.');
+      detSetStatus(false);
+      return;
+    }
+    detHideAlert();
+    detSetStatus(true);
+
+    const cap      = parseFloat(detPatient.cap) || 1000;
+    const weightKg = parseFloat(d.weight) || 0;
+    const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
+    const nowTs    = Date.now(); // Use arrival time as real timestamp
+
+    // Add to rolling readings buffer (max 30 points)
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining, infused: Math.max(0, cap - remaining) });
+    if (detReadings.length > 30) detReadings.shift();
+
+    detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
+
+    // Start chart timer on first reading if not already running
+    if (!detChartTimer) startChartTimer();
+  }, (error) => {
+    detShowAlert('Firebase error: ' + error.message);
+    detSetStatus(false);
+  });
+}
+
+function detStopLiveListener() {
+  if (detRtdbListener && window._rtdbOff) {
+    try { window._rtdbOff(detRtdbListener); } catch(e) {}
+    detRtdbListener = null;
+  }
+}
+
+let detChartTimer = null;
+
+// Update all live display elements with smooth animation
+// Chart and table are NOT updated here — they update on a 10s timer
+function detUpdateLiveDisplay(remaining, weightKg, cap, nowTs) {
+  const infused = Math.max(0, cap - remaining);
+  const pct     = ((infused / cap) * 100);
+  const pctStr  = pct.toFixed(1);
+
+  // ── Calculate rolling infusion rate (mL/hr) from last 5 readings ──
+  let rate = 0;
+  if (detReadings.length >= 2) {
+    const window5 = detReadings.slice(-5);
+    const first   = window5[0];
+    const last    = window5[window5.length - 1];
+    const dh      = (last.time - first.time) / 3600000;
+    if (dh > 0.0001) {
+      rate = Math.max(0, (first.remaining - last.remaining) / dh);
+    }
+  }
+
+  const eta = rate > 0 ? (remaining / rate) : null;
+
+  // ── Smooth animated value updates (INSTANT — every ESP32 push) ──
+  animateValue('dRemaining', remaining, 1, '<span class="dhc-unit">mL</span>');
+  animateValue('dInfused',   infused,   1, '<span class="dhc-unit">mL</span>');
+  animateValue('dWeight',    weightKg,  4, '<span class="dstat-unit">kg</span>');
+  animateValue('dAvgRate',   rate,      1, '<span class="dstat-unit">mL/hr</span>');
+
+  document.getElementById('dRate').innerHTML     = rate.toFixed(1) + '<span class="dhc-unit">mL/hr</span>';
+  document.getElementById('dETA').textContent    = 'ETA: ' + (eta != null ? fmtH(eta) : '—');
+  document.getElementById('dRemainingTs').textContent = 'Updated: ' + new Date(nowTs).toLocaleString();
+  document.getElementById('dInfusedPct').textContent  = pctStr + '% completed';
+
+  // Progress bar
+  const fill = document.getElementById('dProgFill');
+  fill.style.width  = pctStr + '%';
+  fill.className    = 'dprog-fill' + (remaining < cap * 0.2 ? ' warn' : '');
+  document.getElementById('dProgPct').textContent = pctStr + '%';
+  document.getElementById('dProgMid').textContent = (cap / 2).toFixed(0) + ' mL';
+  document.getElementById('dProgMax').textContent = cap + ' mL';
+
+  // Min / Max / Count from rolling buffer
+  const rVals = detReadings.map(r => r.remaining);
+  document.getElementById('dMin').innerHTML      = Math.min(...rVals).toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dMax').innerHTML      = Math.max(...rVals).toFixed(1) + '<span class="dstat-unit">mL</span>';
+  document.getElementById('dCount').textContent  = detReadings.length;
+
+  // Pulse animation on hero cards
+  document.querySelectorAll('.dhc').forEach(el => {
+    el.classList.remove('live-pulse');
+    void el.offsetWidth;
+    el.classList.add('live-pulse');
+  });
+
+  // Update liveData for other pages
+  liveData[detPatient.chId] = { pct, remaining, rate, ts: new Date(nowTs), stale: false };
+  updateGlobalStats();
+  updateRegistryRow(detPatient.chId);
+
+  // Chart and table are updated by the 10s timer — NOT here
+}
+
+// ── Chart + Table timer (every 10 seconds) ──
+function startChartTimer() {
+  stopChartTimer();
+  // Render immediately on start
+  const cap = parseFloat(detPatient?.cap) || 1000;
+  detRenderChart(detReadings, cap);
+  detRenderTable(detReadings, cap);
+  // Then every 10 seconds
+  detChartTimer = setInterval(() => {
+    if (!detPatient) return;
+    const c = parseFloat(detPatient.cap) || 1000;
+    detRenderChart(detReadings, c);
+    detRenderTable(detReadings, c);
+  }, 10000);
+}
+
+function stopChartTimer() {
+  clearInterval(detChartTimer);
+  detChartTimer = null;
+}
+
+// Load history readings from RTDB (for chart on first open)
+async function detLoadHistory() {
+  if (!detPatient?.chId) return;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url') || '';
+  if (!rtdbUrl) return;
+
+  document.getElementById('dChartLoad').style.display = 'flex';
+  try {
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(detPatient.chId)}/readings.json?orderBy="ts"&limitToLast=30`;
+    const res = await fetch(url);
+    if (!res.ok) return;
+    const raw = await res.json();
+    if (!raw) return;
+
+    const cap = parseFloat(detPatient.cap) || 1000;
+    const vals = Object.values(raw);
+    const history = vals
+      .filter(f => f.weight != null && !isNaN(parseFloat(f.weight)))
+      .map((f, i) => {
+        const rem = Math.min(Math.max(0, kgToMl(parseFloat(f.weight))), cap);
+        return {
+          // Space readings 15 seconds apart going back from now
+          time: new Date(Date.now() - (vals.length - 1 - i) * 15000),
+          weightKg: parseFloat(f.weight),
+          remaining: rem,
+          infused: Math.max(0, cap - rem)
+        };
+      })
+      .sort((a, b) => a.time - b.time);
+
+    if (history.length) {
+      detReadings = history;
+      document.getElementById('dCount').textContent = detReadings.length;
+      // Small delay so canvas is fully rendered after page transition
+      setTimeout(() => startChartTimer(), 300);
+    }
+  } catch(e) {
+    // History load failed silently — live data will populate the chart
+  } finally {
+    document.getElementById('dChartLoad').style.display = 'none';
+  }
+}
+
+// Fallback REST polling (used only if RTDB SDK not available)
+async function detFetchDataRest(){
   if(!detPatient) return;
   const ch = detPatient.chId;
-  const ak = detPatient.readKey || '';
-  const cap= parseFloat(detPatient.cap)||500;
-  if(!ch){ detShowAlert('No Channel ID configured for this patient.'); return; }
-  detHideAlert();
-  document.getElementById('dChartLoad').style.display='flex';
-  const url = ak
-    ? `https://api.thingspeak.com/channels/${ch}/fields/1.json?api_key=${ak}&results=20`
-    : `https://api.thingspeak.com/channels/${ch}/fields/1.json?results=20`;
+  const cap = parseFloat(detPatient.cap) || 1000;
+  if(!ch){ detShowAlert('No Device ID configured.'); return; }
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url')||'';
+  if(!rtdbUrl){ detShowAlert('Firebase Realtime DB URL not set. Go to Configuration.'); return; }
   try{
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(ch)}/latest.json`;
     const res = await fetch(url);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    const feeds = (data.feeds||[])
-      .filter(f=>f.field1!=null&&f.field1!=='')
-      .map(f=>({time:new Date(f.created_at), weightKg:parseFloat(f.field1)}))
-      .filter(e=>!isNaN(e.weightKg));
-    if(!feeds.length) throw new Error('No data. Check Channel ID / API Key.');
-    detProcess(feeds, cap);
+    const d = await res.json();
+    if(!d||d.weight==null) throw new Error('No data from ESP32 yet.');
+    const weightKg  = parseFloat(d.weight)||0;
+    const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
+    const nowTs     = Date.now();
+    detReadings.push({ time: new Date(nowTs), weightKg, remaining, infused: Math.max(0, cap - remaining) });
+    if (detReadings.length > 30) detReadings.shift();
+    detUpdateLiveDisplay(remaining, weightKg, cap, nowTs);
     detSetStatus(true);
-    // Store to liveData for other pages
-    const last = feeds[feeds.length-1];
-    const rem  = Math.min(kgToMl(last.weightKg), cap);
-    let rate=0;
-    if(feeds.length>=2){
-      const a=feeds[feeds.length-2],b=feeds[feeds.length-1];
-      const dh=(b.time-a.time)/3600000;
-      if(dh>0) rate=Math.max(0,(kgToMl(a.weightKg)-rem)/dh);
-    }
-    liveData[ch]={pct:(rem/cap)*100, remaining:rem, rate, ts:last.time, stale:false};
-    updateGlobalStats();
+    detHideAlert();
   }catch(err){
     detShowAlert('Error: '+err.message);
     detSetStatus(false);
-  }finally{
-    document.getElementById('dChartLoad').style.display='none';
   }
-}
-
-function detProcess(feeds, cap){
-  const entries = feeds.map(f=>{
-    const remaining = Math.min(kgToMl(f.weightKg), cap);
-    const infused   = Math.max(0, cap-remaining);
-    return {...f, remaining, infused};
-  });
-  const latest = entries[entries.length-1];
-  const pct    = ((latest.infused/cap)*100).toFixed(1);
-  const rVals  = entries.map(e=>e.remaining);
-  const minR   = Math.min(...rVals), maxR=Math.max(...rVals);
-  let rate=0;
-  if(entries.length>=2){
-    const a=entries[entries.length-2],b=entries[entries.length-1];
-    const dh=(b.time-a.time)/3600000;
-    if(dh>0) rate=Math.max(0,(a.remaining-b.remaining)/dh);
-  }
-  const eta=rate>0?(latest.remaining/rate):null;
-
-  document.getElementById('dRemaining').innerHTML  = latest.remaining.toFixed(1)+'<span class="dhc-unit">mL</span>';
-  document.getElementById('dRemainingTs').textContent= 'Updated: '+latest.time.toLocaleString();
-  document.getElementById('dInfused').innerHTML    = latest.infused.toFixed(1)+'<span class="dhc-unit">mL</span>';
-  document.getElementById('dInfusedPct').textContent= pct+'% completed';
-  document.getElementById('dRate').innerHTML       = rate.toFixed(1)+'<span class="dhc-unit">mL/hr</span>';
-  document.getElementById('dETA').textContent      = 'ETA: '+(eta!=null?fmtH(eta):'—');
-
-  const fill=document.getElementById('dProgFill');
-  fill.style.width = pct+'%';
-  fill.className   = 'dprog-fill'+(latest.remaining<cap*0.2?' warn':'');
-  document.getElementById('dProgPct').textContent  = pct+'%';
-  document.getElementById('dProgMid').textContent  = (cap/2).toFixed(0)+' mL';
-  document.getElementById('dProgMax').textContent  = cap+' mL';
-
-  document.getElementById('dWeight').innerHTML  = latest.weightKg.toFixed(4)+'<span class="dstat-unit">kg</span>';
-  document.getElementById('dAvgRate').innerHTML = rate.toFixed(1)+'<span class="dstat-unit">mL/hr</span>';
-  document.getElementById('dMin').innerHTML     = minR.toFixed(1)+'<span class="dstat-unit">mL</span>';
-  document.getElementById('dMax').innerHTML     = maxR.toFixed(1)+'<span class="dstat-unit">mL</span>';
-  document.getElementById('dCount').textContent = entries.length;
-
-  detRenderChart(entries, cap);
-  detRenderTable(entries, cap);
 }
 
 function detRenderChart(entries, cap){
-  if(detChartInst){ detChartInst.destroy(); detChartInst=null; }
-  const ctx = document.getElementById('dChart').getContext('2d');
-  const labels = entries.map(e=>e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
-  const g1=ctx.createLinearGradient(0,0,0,220);g1.addColorStop(0,'rgba(0,212,255,0.28)');g1.addColorStop(1,'rgba(0,212,255,0)');
-  const g2=ctx.createLinearGradient(0,0,0,220);g2.addColorStop(0,'rgba(16,232,152,0.2)');g2.addColorStop(1,'rgba(16,232,152,0)');
+  if (!entries || !entries.length) return;
+
+  const labels    = entries.map(e => e.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}));
+  const remaining = entries.map(e => parseFloat(e.remaining.toFixed(2)));
+  const infused   = entries.map(e => parseFloat((e.infused ?? Math.max(0, cap - e.remaining)).toFixed(2)));
+
+  // If chart already exists — just update data (no flicker, no destroy)
+  if (detChartInst) {
+    detChartInst.data.labels              = labels;
+    detChartInst.data.datasets[0].data    = remaining;
+    detChartInst.data.datasets[1].data    = infused;
+    detChartInst.data.datasets[0].pointRadius = entries.length > 30 ? 0 : 3;
+    detChartInst.options.scales.y.max     = cap;
+    detChartInst.update('none');
+    return;
+  }
+
+  // First time — create the chart
+  const canvas = document.getElementById('dChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const g1  = ctx.createLinearGradient(0,0,0,220);
+  g1.addColorStop(0,'rgba(0,212,255,0.28)'); g1.addColorStop(1,'rgba(0,212,255,0)');
+  const g2  = ctx.createLinearGradient(0,0,0,220);
+  g2.addColorStop(0,'rgba(16,232,152,0.2)'); g2.addColorStop(1,'rgba(16,232,152,0)');
+
   detChartInst = new Chart(ctx,{
     type:'line',
     data:{labels, datasets:[
-      {label:'Remaining (mL)',data:entries.map(e=>e.remaining.toFixed(2)),borderColor:'#00d4ff',backgroundColor:g1,borderWidth:2,pointRadius:entries.length>30?0:3,fill:true,tension:0.4,yAxisID:'y'},
-      {label:'Infused (mL)',  data:entries.map(e=>e.infused.toFixed(2)),  borderColor:'#10e898',backgroundColor:g2,borderWidth:1.5,pointRadius:0,fill:true,tension:0.4,yAxisID:'y'}
+      {label:'Remaining (mL)', data:remaining, borderColor:'#00d4ff', backgroundColor:g1,
+       borderWidth:2, pointRadius:entries.length>30?0:3, fill:true, tension:0.4, yAxisID:'y'},
+      {label:'Infused (mL)',   data:infused,   borderColor:'#10e898', backgroundColor:g2,
+       borderWidth:1.5, pointRadius:0, fill:true, tension:0.4, yAxisID:'y'}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{
+      responsive:true, maintainAspectRatio:false,
       plugins:{
         legend:{labels:{color:'#4a6a80',font:{family:'JetBrains Mono',size:11}}},
-        tooltip:{backgroundColor:'#0c1520',borderColor:'#162030',borderWidth:1,titleColor:'#4a6a80',bodyColor:'#dff0ff',
-          titleFont:{family:'JetBrains Mono',size:10},bodyFont:{family:'JetBrains Mono',size:12},
-          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}}
+        tooltip:{
+          backgroundColor:'#0c1520', borderColor:'#162030', borderWidth:1,
+          titleColor:'#4a6a80', bodyColor:'#dff0ff',
+          titleFont:{family:'JetBrains Mono',size:10},
+          bodyFont:{family:'JetBrains Mono',size:12},
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y} mL`}
+        }
       },
       scales:{
         x:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'#0e1c28'}},
         y:{ticks:{color:'#2a4a60',font:{family:'JetBrains Mono',size:9},callback:v=>v+' mL'},grid:{color:'#0e1c28'},max:cap}
-      },animation:{duration:600}
+      },
+      animation:{duration:600}
     }
   });
 }
 
 function detRenderTable(entries, cap){
-  const rows=[...entries].reverse().map((e,i)=>{
-    const pct=((e.infused/cap)*100).toFixed(1);
-    let cls,lbl;
-    if(e.remaining>cap*0.5){lbl='OK';cls='db-ok';}
-    else if(e.remaining>cap*0.2){lbl='LOW';cls='db-low';}
-    else{lbl='CRITICAL';cls='db-crit';}
+  const tbody = document.getElementById('dTBody');
+  if (!tbody) return;
+  if (!entries || !entries.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#4a6a80;padding:32px;">No readings yet — connect ESP32 to start logging</td></tr>';
+    return;
+  }
+  const rows = [...entries].reverse().map((e,i) => {
+    const inf = e.infused ?? Math.max(0, cap - e.remaining);
+    const pct = ((inf / cap) * 100).toFixed(1);
+    let cls, lbl;
+    if      (e.remaining > cap * 0.5) { lbl = 'OK';       cls = 'db-ok';   }
+    else if (e.remaining > cap * 0.2) { lbl = 'LOW';      cls = 'db-low';  }
+    else                               { lbl = 'CRITICAL'; cls = 'db-crit'; }
     return `<tr>
       <td style="color:#4a6a80">${i+1}</td>
       <td>${e.time.toLocaleString()}</td>
       <td style="color:#4a6a80">${e.weightKg.toFixed(4)}</td>
       <td style="color:#00d4ff;font-weight:600">${e.remaining.toFixed(1)}</td>
-      <td style="color:#10e898">${e.infused.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
+      <td style="color:#10e898">${inf.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
       <td><span class="${cls}">${lbl}</span></td>
     </tr>`;
   });
-  document.getElementById('dTBody').innerHTML = rows.join('');
+  tbody.innerHTML = rows.join('');
 }
 
 function detShowAlert(m){ const e=document.getElementById('detAlert'); e.textContent='⚠ '+m; e.style.display='block'; }
@@ -1587,17 +1977,6 @@ function detSetStatus(on){
   document.getElementById('dStatusDot').className='ddot'+(on?'':' off');
   document.getElementById('dStatusTxt').textContent=on?'Live':'Offline';
 }
-
-function startDetCD(){
-  clearInterval(detCdTimer); detCdVal=5;
-  document.getElementById('dcd').textContent=detCdVal;
-  detCdTimer=setInterval(()=>{
-    detCdVal--;
-    document.getElementById('dcd').textContent=detCdVal;
-    if(detCdVal<=0){ detCdVal=5; detFetchData(); }
-  },1000);
-}
-function stopDetCD(){ clearInterval(detCdTimer); document.getElementById('dcd').textContent='—'; }
 
 // ═══════════════════════════════════════════════════════════════
 // STORAGE HELPERS
@@ -1628,7 +2007,7 @@ function loadFirebaseConfigUI(){
 }
 
 function loadConfig() {
-  document.getElementById('cfgWriteKey').value  = localStorage.getItem('hm_write_key')  ||'';
+  document.getElementById('cfgRtdbUrl').value  = localStorage.getItem('hm_rtdb_url')    ||'';
   document.getElementById('cfgAdminName').value = localStorage.getItem('hm_admin_name') ||'Head Nurse';
   document.getElementById('cfgHospital').value  = localStorage.getItem('hm_hospital')   ||'';
   document.getElementById('cfgRefresh').value   = localStorage.getItem('hm_refresh')    ||'60000';
@@ -1636,13 +2015,26 @@ function loadConfig() {
 }
 
 function saveConfig(){
-  localStorage.setItem('hm_write_key',  document.getElementById('cfgWriteKey').value.trim());
-  localStorage.setItem('hm_admin_name', document.getElementById('cfgAdminName').value.trim());
-  localStorage.setItem('hm_hospital',   document.getElementById('cfgHospital').value.trim());
-  localStorage.setItem('hm_refresh',    document.getElementById('cfgRefresh').value);
-  document.getElementById('sbUserName').textContent = document.getElementById('cfgAdminName').value.trim()||'Head Nurse';
+  const rtdbUrl   = document.getElementById('cfgRtdbUrl').value.trim();
+  const adminName = document.getElementById('cfgAdminName').value.trim();
+  const hospital  = document.getElementById('cfgHospital').value.trim();
+  const refresh   = document.getElementById('cfgRefresh').value;
+
+  localStorage.setItem('hm_rtdb_url',   rtdbUrl);
+  localStorage.setItem('hm_admin_name', adminName);
+  localStorage.setItem('hm_hospital',   hospital);
+  localStorage.setItem('hm_refresh',    refresh);
+  document.getElementById('sbUserName').textContent = adminName||'Head Nurse';
   startAutoRefresh();
-  showToast('✅ Configuration saved','success');
+
+  // ── Sync to Firebase Firestore so ALL devices share this config ──
+  if (window.fbSaveGlobalConfig) {
+    window.fbSaveGlobalConfig({ rtdbUrl, adminName, hospital, refresh })
+      .then(()  => showToast('✅ Configuration saved & synced to all devices','success'))
+      .catch(()  => showToast('✅ Configuration saved (locally only)','success'));
+  } else {
+    showToast('✅ Configuration saved','success');
+  }
 }
 
 function exportData(){
@@ -1672,9 +2064,8 @@ function clearAllData(){
 function openAddModal(){
   editIdx=-1;
   document.getElementById('modalTitle').textContent='Assign Patient to Device';
-  ['fName','fMrn','fWard','fBed','fChId','fNotes','fReadKey'].forEach(id=>document.getElementById(id).value='');
+  ['fName','fMrn','fWard','fBed','fChId','fNotes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fCap').value='500';
-  document.getElementById('fWriteKey').value=localStorage.getItem('hm_write_key')||'';
   document.getElementById('pushStatus').style.display='none';
   document.getElementById('patientModal').classList.add('show');
 }
@@ -1689,8 +2080,6 @@ function openEditModal(idx){
   document.getElementById('fChId').value    =p.chId    ||'';
   document.getElementById('fCap').value     =p.cap     ||'500';
   document.getElementById('fNotes').value   =p.notes   ||'';
-  document.getElementById('fWriteKey').value=p.writeKey||localStorage.getItem('hm_write_key')||'';
-  document.getElementById('fReadKey').value =p.readKey ||'';
   document.getElementById('pushStatus').style.display='none';
   document.getElementById('patientModal').classList.add('show');
 }
@@ -1698,46 +2087,37 @@ function openEditModal(idx){
 function closeModal(){ document.getElementById('patientModal').classList.remove('show'); }
 
 // ═══════════════════════════════════════════════════════════════
-// PUSH TO THINGSPEAK
+// SAVE PATIENT (Firebase only — no ThingSpeak)
 // ═══════════════════════════════════════════════════════════════
 async function pushPatient(){
-  const name=document.getElementById('fName').value.trim();
-  const mrn=document.getElementById('fMrn').value.trim();
-  const ward=document.getElementById('fWard').value.trim();
-  const bed=document.getElementById('fBed').value.trim();
-  const chId=document.getElementById('fChId').value.trim();
-  const writeKey=document.getElementById('fWriteKey').value.trim();
-  const readKey=document.getElementById('fReadKey').value.trim();
-  const cap=document.getElementById('fCap').value;
-  const notes=document.getElementById('fNotes').value.trim();
-  if(!name||!ward||!bed||!chId||!writeKey){
-    setPushStatus('⚠️ Fill all required fields','warn'); return;
+  const name     = document.getElementById('fName').value.trim();
+  const mrn      = document.getElementById('fMrn').value.trim();
+  const ward     = document.getElementById('fWard').value.trim();
+  const bed      = document.getElementById('fBed').value.trim();
+  const chId     = document.getElementById('fChId').value.trim();
+  const cap      = document.getElementById('fCap').value;
+  const notes    = document.getElementById('fNotes').value.trim();
+  if(!name||!ward||!bed||!chId){
+    setPushStatus('⚠️ Fill all required fields (Name, Ward, Bed, Device ID)','warn'); return;
   }
   const btn=document.getElementById('pushBtn');
-  btn.textContent='⏳ Pushing…'; btn.disabled=true;
-  setPushStatus('Connecting to ThingSpeak…','info');
-  const params=new URLSearchParams({api_key:writeKey,
-    field5:name+(mrn?` [${mrn}]`:''),field6:ward,field7:bed,field8:cap});
+  btn.textContent='⏳ Saving…'; btn.disabled=true;
+  setPushStatus('Saving to Firebase…','info');
   try{
-    const res=await fetch(`https://api.thingspeak.com/update?${params}`);
-    const text=await res.text();
-    if(res.ok&&text!=='0'){
-      const p={name,mrn,ward,bed,chId,writeKey,readKey,cap,notes,
-        pushedAt:new Date().toISOString(),entryId:text.trim(),status:'active'};
-      if(window._firebaseReady && window._firebaseReady()){
-        await window.fbSave(p); // Firestore onSnapshot will re-render all pages
-      } else {
-        if(editIdx>=0) patients[editIdx]=p; else patients.push(p);
-        save();updateGlobalStats();renderRegistry();
-      }
-      setPushStatus(`✅ Pushed (Entry #${text.trim()}) — nurse app updates on next refresh.`,'success');
-      showToast(`✅ "${name}" assigned to Ch.${chId}`,'success');
-      setTimeout(()=>{ closeModal(); fetchPatientLive(p); },2000);
-    } else if(text==='0'){
-      setPushStatus('❌ ThingSpeak returned 0 — wait 15s between updates','error');
-    } else { setPushStatus('❌ Unexpected: '+text,'error'); }
-  }catch(e){ setPushStatus('❌ Network error: '+e.message,'error'); }
-  finally{ btn.textContent='📤 Push to ThingSpeak';btn.disabled=false; }
+    const p={name,mrn,ward,bed,chId,cap,notes,
+      pushedAt:new Date().toISOString(),status:'active'};
+    if(window._firebaseReady && window._firebaseReady()){
+      await window.fbSave(p);
+      // onSnapshot will re-render all pages
+    } else {
+      if(editIdx>=0) patients[editIdx]=p; else patients.push(p);
+      save(); updateGlobalStats(); renderRegistry();
+    }
+    setPushStatus(`✅ Patient "${name}" saved to Firebase (Device: ${chId}).`,'success');
+    showToast(`✅ "${name}" assigned to Device ${chId}`,'success');
+    setTimeout(()=>{ closeModal(); fetchPatientLive(p); },2000);
+  }catch(e){ setPushStatus('❌ Save error: '+e.message,'error'); }
+  finally{ btn.textContent='💾 Save Patient'; btn.disabled=false; }
 }
 
 function setPushStatus(msg,type){
@@ -1752,23 +2132,25 @@ function setPushStatus(msg,type){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// LIVE DATA FETCH (background, for overview/registry)
+// LIVE DATA FETCH (background, for overview/registry) — Firebase RTDB
 // ═══════════════════════════════════════════════════════════════
 async function fetchPatientLive(p){
   if(!p.chId) return;
+  const rtdbUrl = localStorage.getItem('hm_rtdb_url')||'';
+  if(!rtdbUrl){ liveData[p.chId]={pct:null,remaining:null,rate:0,ts:null,stale:true}; return; }
   try{
-    const url=p.readKey
-      ?`https://api.thingspeak.com/channels/${p.chId}/feeds/last.json?api_key=${p.readKey}`
-      :`https://api.thingspeak.com/channels/${p.chId}/feeds/last.json`;
+    const url = `${rtdbUrl.replace(/\/$/,'')}/devices/${encodeURIComponent(p.chId)}/latest.json`;
     const res=await fetch(url); if(!res.ok) return;
     const d=await res.json();
-    const remaining=parseFloat(d.field2)||0;
-    const rate=parseFloat(d.field4)||0;
-    const cap=parseFloat(p.cap)||500;
-    const pct=Math.min(100,Math.max(0,(remaining/cap)*100));
-    const ts=d.created_at?new Date(d.created_at):null;
-    const stale=ts?(Date.now()-ts.getTime())>10*60*1000:true;
-    liveData[p.chId]={pct,remaining,rate,ts,stale};
+    if(!d||d.weight==null) return;
+    const weightKg = parseFloat(d.weight)||0;
+    const cap      = parseFloat(p.cap)||500;
+    const DEN      = 1.006;
+    const remaining = Math.min(Math.max(0,(weightKg - 0.055)*1000/DEN), cap);
+    const pct       = Math.min(100, Math.max(0,(remaining/cap)*100));
+    const ts        = d.ts ? new Date(d.ts) : null;
+    const stale     = ts ? (Date.now()-ts.getTime())>10*60*1000 : true;
+    liveData[p.chId]={pct,remaining,rate:0,ts,stale};
     updateGlobalStats();
     const activePage=document.querySelector('.page.active')?.id?.replace('page-','');
     if(activePage==='overview') renderOverview();
@@ -1778,6 +2160,12 @@ async function fetchPatientLive(p){
   }catch(e){}
 }
 
+// Silent background refresh — no toasts (called by auto-timer)
+async function refreshAllStatusSilent(){
+  await Promise.all(patients.map(p=>fetchPatientLive(p)));
+}
+
+// Manual refresh — shows toasts (called by Refresh button only)
 async function refreshAllStatus(){
   showToast('🔄 Refreshing…','success');
   await Promise.all(patients.map(p=>fetchPatientLive(p)));
@@ -1787,7 +2175,7 @@ async function refreshAllStatus(){
 function startAutoRefresh(){
   clearInterval(autoRefreshTimer);
   const iv=parseInt(localStorage.getItem('hm_refresh')||'60000');
-  autoRefreshTimer=setInterval(refreshAllStatus,iv);
+  autoRefreshTimer=setInterval(refreshAllStatusSilent, iv); // Silent — no toasts
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1805,6 +2193,7 @@ function getStatus(chId){
 function statusBadge(chId){
   const d=liveData[chId];const st=getStatus(chId);
   if(st==='idle')    return `<span class="badge b-idle">⏳ Fetching…</span>`;
+  if(d?.noUrl)       return `<span class="badge b-warn" title="Go to Configuration → Firebase Realtime DB URL">⚙️ Set RTDB URL</span>`;
   if(st==='offline') return `<span class="badge b-idle">📡 No Data</span>`;
   const cls=st==='crit'?'b-crit':st==='warn'?'b-warn':'b-ok';
   const ico=st==='crit'?'🚨':st==='warn'?'⚠️':'✅';
@@ -2102,8 +2491,16 @@ function saveGroqConfig(){
   localStorage.setItem('hm_groq_model', model);
   document.getElementById('groqStatus').textContent = '✅ Saved!';
   setTimeout(()=>{ document.getElementById('groqStatus').textContent=''; }, 3000);
-  showToast('🤖 AI settings saved! Ready to use.','success');
   updateAiKeyWarning();
+
+  // ── Sync to Firebase Firestore so ALL devices share the same Groq key ──
+  if (window.fbSaveGlobalConfig) {
+    window.fbSaveGlobalConfig({ groqKey: key, groqModel: model })
+      .then(()  => showToast('🤖 AI settings saved & synced to all devices!','success'))
+      .catch(()  => showToast('🤖 AI settings saved (locally only).','success'));
+  } else {
+    showToast('🤖 AI settings saved! Ready to use.','success');
+  }
 }
 
 function updateAiKeyWarning(){
@@ -2673,6 +3070,8 @@ window.closeRecordDetail    = closeRecordDetail;
 window.copyRecordText       = copyRecordText;
 window.copyAnalysisReport   = copyAnalysisReport;
 window.setPushStatus        = setPushStatus;
+window.applyGlobalConfigFromFirebase = applyGlobalConfigFromFirebase;
+window.togglePassword       = togglePassword;
 </script>
 </body>
 </html>
