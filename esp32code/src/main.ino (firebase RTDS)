@@ -1,91 +1,116 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "HX711.h"
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
-// ================= DEVICE IDENTITY =================
+// ================= DEVICE =================
 const char* DEVICE_ID = "ESP1";
-
-// ================= FIREBASE REALTIME DATABASE =================
 const char* RTDB_URL = "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app/";
 
 // ================= VARIABLES =================
-float D           = 0;          // Weight in kg
-float B           = 287836.24;  // NEW CALIBRATION FACTOR
-float C           = 1.0;        // Reference full bag (kg)
-float percentage  = 0.0;
-bool  isMuted     = false;
+float weight_kg = 0;
+float volume_ml = 0;
+
+// ✅ FINAL CALIBRATION
+float calibration = 270300;
+
+float max_volume = 1000.0;
+float percentage = 0.0;
+String statusText = "INIT";
+
+// ================= OLED =================
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // ================= PINS =================
-#define DT         18
-#define SCK        19
-#define LED_GREEN  15
-#define LED_RED     2
-#define BUZZER      4
+#define DT 18
+#define SCK 19
 
 // ================= WIFI =================
-const char* ssid     = "RMK";
-const char* password = "135792468";
+const char* ssid = "MVHS_EXT";
+const char* password = "gt25233040";
 
 HX711 scale;
 
-// ===== Blink Control (Non-blocking) =====
-unsigned long previousBlink = 0;
-const int     blinkInterval = 300;
-bool          redState      = false;
-
-// ===== Upload Interval =================
-const unsigned long UPLOAD_INTERVAL = 5000;  // 5 seconds
 unsigned long lastUpload = 0;
+unsigned long lastDisplay = 0;
+
+// =========================================================
+// Stable averaging
+float stable_read() {
+  float sum = 0;
+  for (int i = 0; i < 30; i++) {
+    sum += scale.get_units(1);
+    delay(5);
+  }
+  return sum / 30;
+}
+
+// =========================================================
+void drawCentered(String line1, String line2) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+
+  int16_t x1, y1;
+  uint16_t w, h;
+
+  display.getTextBounds(line1, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor((128 - w) / 2, 20);
+  display.print(line1);
+
+  display.getTextBounds(line2, 0, 0, &x1, &y1, &w, &h);
+  display.setCursor((128 - w) / 2, 40);
+  display.print(line2);
+
+  display.display();
+}
 
 // =========================================================
 void setup() {
   Serial.begin(115200);
-  delay(2000);
-
-  Serial.println("=== HOSPITAL BAG MONITOR BOOTING ===");
-
-  pinMode(LED_GREEN, OUTPUT);
-  pinMode(LED_RED,   OUTPUT);
-  pinMode(BUZZER,    OUTPUT);
-
-  digitalWrite(LED_GREEN, LOW);
-  digitalWrite(LED_RED,   LOW);
-  noTone(BUZZER);
-
-  // -------- HX711 Setup --------
-  Serial.println("[SCALE] Initializing HX711...");
-  scale.begin(DT, SCK);
   delay(1000);
-  scale.set_scale(B);
 
-  // CRITICAL: Ensure scale is empty during this 5-second window
-  Serial.println("[SCALE] Ensure scale is EMPTY. Taring in 5 seconds...");
+  Wire.begin(33, 25);
+
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED not found");
+    while (true);
+  }
+
+  drawCentered("Smart IV Boot", "Initializing");
+
+  // HX711
+  scale.begin(DT, SCK);
+  scale.set_scale(calibration);
+
+  drawCentered("Taring...", "Keep hook only");
   delay(5000);
   scale.tare();
-  Serial.println("[SCALE] Tare complete. System Ready.");
 
-  // -------- WiFi Setup --------
-  Serial.print("[WIFI] Connecting to ");
-  Serial.print(ssid);
+  // WiFi
+  drawCentered("Connecting WiFi", "");
+  Serial.print("[WIFI] Connecting");
+
   WiFi.begin(ssid, password);
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
     attempts++;
-    if (attempts > 40) {
-      Serial.println("\n[WIFI] ❌ Failed to connect. Restarting...");
-      ESP.restart();
-    }
+    Serial.print(".");
+    drawCentered("Connecting WiFi", "Try: " + String(attempts));
+    if (attempts > 40) ESP.restart();
   }
 
-  Serial.println("\n[WIFI] ✅ Connected!");
-  Serial.println("================================");
+  Serial.println("\n[WIFI] Connected");
+  drawCentered("WiFi Connected", "");
+  delay(1000);
 }
 
-// =========================================================
-//  Helper — PUT or POST to Firebase RTDB
 // =========================================================
 int firebaseRequest(const String& path, const String& json, bool usePut) {
   HTTPClient http;
@@ -102,78 +127,56 @@ int firebaseRequest(const String& path, const String& json, bool usePut) {
 // =========================================================
 void loop() {
 
-  // -------- WiFi Watchdog --------
   if (WiFi.status() != WL_CONNECTED) {
     WiFi.begin(ssid, password);
   }
 
-  // -------- Read Weight --------
-  if (scale.is_ready()) {
-    // Increased to 30 samples to filter out the noise from your screenshots
-    float rawRead = scale.get_units(30); 
-    D = max(0.0f, rawRead); 
-    
-    // Calculate percentage based on 1.0kg full bag
-    percentage = (D / C) * 100.0;
-    
-    Serial.println("----------------------------------");
-    Serial.print("[SCALE] Weight     : ");
-    Serial.print(D, 3);
-    Serial.println(" kg");
-    Serial.print("[SCALE] Percentage : ");
-    Serial.print(percentage, 1);
-    Serial.println(" %");
+  // -------- READ --------
+  float reading = stable_read();
+
+  // Remove tiny drift
+  if (abs(reading) < 0.002) reading = 0;
+
+  weight_kg = reading;
+  volume_ml = weight_kg * 1000.0;
+  percentage = (volume_ml / max_volume) * 100.0;
+
+  // -------- STATUS --------
+  if (percentage >= 50) statusText = "NORMAL";
+  else if (percentage >= 20) statusText = "LOW";
+  else statusText = "CRITICAL";
+
+  // -------- SERIAL --------
+  Serial.print("Volume: ");
+  Serial.print(volume_ml, 1);
+  Serial.print(" mL | ");
+  Serial.print(percentage, 1);
+  Serial.print(" % | Status: ");
+  Serial.println(statusText);
+
+  // -------- OLED --------
+  if (millis() - lastDisplay > 1000) {
+    lastDisplay = millis();
+
+    String line1 = String((int)volume_ml) + "mL " + String((int)percentage) + "% ";
+    line1 += (WiFi.status() == WL_CONNECTED) ? "W" : "X";
+
+    drawCentered(line1, statusText);
   }
 
-  // -------- Status Indicator Logic --------
-  if (D >= 1.0) {
-    // NORMAL
-    digitalWrite(LED_GREEN, HIGH);
-    digitalWrite(LED_RED,   LOW);
-    noTone(BUZZER);
-    isMuted = false;
-  }
-  else if (D >= 0.5) {
-    // LOW
-    digitalWrite(LED_GREEN, LOW);
-    digitalWrite(LED_RED,   HIGH);
-    noTone(BUZZER);
-  }
-  else {
-    // CRITICAL
-    digitalWrite(LED_GREEN, LOW);
-    
-    // Non-blocking Red LED Blink
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousBlink >= blinkInterval) {
-      previousBlink = currentMillis;
-      redState = !redState;
-      digitalWrite(LED_RED, redState);
-    }
-    
-    if (!isMuted) tone(BUZZER, 1000);
-  }
+  // -------- FIREBASE --------
+  if (millis() - lastUpload > 5000 && WiFi.status() == WL_CONNECTED) {
+    lastUpload = millis();
 
-  // -------- Firebase Upload --------
-  unsigned long now = millis();
-  if (WiFi.status() == WL_CONNECTED && (now - lastUpload >= UPLOAD_INTERVAL)) {
-    lastUpload = now;
-
-    String json = "{\"weight\":"     + String(D, 3) +
+    String json = "{\"weight\":" + String(weight_kg, 3) +
                   ",\"percentage\":" + String(percentage, 1) +
-                  ",\"ts\":"         + String(now) +
-                  "}";
+                  ",\"ts\":" + String(millis()) + "}";
 
-    // Update Latest Reading
-    String latestPath = "devices/" + String(DEVICE_ID) + "/latest";
-    int res1 = firebaseRequest(latestPath, json, true);
+    firebaseRequest("devices/" + String(DEVICE_ID) + "/latest", json, true);
+    firebaseRequest("devices/" + String(DEVICE_ID) + "/readings", json, false);
 
-    // Append to History (Log)
-    String readingsPath = "devices/" + String(DEVICE_ID) + "/readings";
-    int res2 = firebaseRequest(readingsPath, json, false);
-    
-    if(res1 > 0) Serial.println("[FIREBASE] Data Synced Successfully.");
+    Serial.println("[FIREBASE] Synced");
   }
 
-  delay(50); 
+  delay(100);
 }
