@@ -1464,7 +1464,8 @@ function startLiveListener(patient) {
 
     const weightKg   = parseFloat(d.weight) || 0;
     const DEN        = 1.006;
-    const remaining  = Math.min(Math.max(0, (weightKg - 0.055) * 1000 / DEN), cap);
+    const volume_ml  = weightKg * 1000;
+    const remaining  = Math.min(Math.max(0, volume_ml), cap);
     const pct        = Math.min(100, Math.max(0, (remaining / cap) * 100));
     const nowTs      = Date.now();
     const ts         = new Date(nowTs);
@@ -1660,8 +1661,10 @@ function closeDetail(){
 // ═══════════════════════════════════════════════════════════════
 // DETAIL PAGE — REAL-TIME FIREBASE RTDB LISTENER
 // ═══════════════════════════════════════════════════════════════
-const DEN = 1.006;
-function kgToMl(kg){ return Math.max(0, (kg - 0.055)*1000/DEN); }
+//const DEN = 1.006;
+function kgToMl(kg){
+  return Math.max(0, kg * 1000);
+}
 function fmtH(h){ return h<1 ? Math.round(h*60)+' min' : h.toFixed(1)+' hr'; }
 
 // Smooth animated number counter
@@ -1710,6 +1713,7 @@ function detStartLiveListener() {
 
     const cap      = parseFloat(detPatient.cap) || 1000;
     const weightKg = parseFloat(d.weight) || 0;
+    const volume_ml = kgToMl(weightKg);
     const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
     const nowTs    = Date.now(); // Use arrival time as real timestamp
 
@@ -1760,7 +1764,7 @@ function detUpdateLiveDisplay(remaining, weightKg, cap, nowTs) {
   // ── Smooth animated value updates (INSTANT — every ESP32 push) ──
   animateValue('dRemaining', remaining, 1, '<span class="dhc-unit">mL</span>');
   animateValue('dInfused',   infused,   1, '<span class="dhc-unit">mL</span>');
-  animateValue('dWeight',    weightKg,  4, '<span class="dstat-unit">kg</span>');
+  animateValue('dWeight',    kgToMl(weightKg),  1, '<span class="dstat-unit">mL</span>');
   animateValue('dAvgRate',   rate,      1, '<span class="dstat-unit">mL/hr</span>');
 
   document.getElementById('dRate').innerHTML     = rate.toFixed(1) + '<span class="dhc-unit">mL/hr</span>';
@@ -1953,6 +1957,7 @@ function detRenderTable(entries, cap){
     return;
   }
   const rows = [...entries].reverse().map((e,i) => {
+  e.volume_ml = kgToMl(e.weightKg);
     const inf = e.infused ?? Math.max(0, cap - e.remaining);
     const pct = ((inf / cap) * 100).toFixed(1);
     let cls, lbl;
@@ -1962,7 +1967,7 @@ function detRenderTable(entries, cap){
     return `<tr>
       <td style="color:#4a6a80">${i+1}</td>
       <td>${e.time.toLocaleString()}</td>
-      <td style="color:#4a6a80">${e.weightKg.toFixed(4)}</td>
+      <td style="color:#4a6a80">${e.volume_ml.toFixed(1)}</td> <!-- Display as mL -->
       <td style="color:#00d4ff;font-weight:600">${e.remaining.toFixed(1)}</td>
       <td style="color:#10e898">${inf.toFixed(1)} <span style="color:#4a6a80">(${pct}%)</span></td>
       <td><span class="${cls}">${lbl}</span></td>
@@ -2146,7 +2151,7 @@ async function fetchPatientLive(p){
     const weightKg = parseFloat(d.weight)||0;
     const cap      = parseFloat(p.cap)||500;
     const DEN      = 1.006;
-    const remaining = Math.min(Math.max(0,(weightKg - 0.055)*1000/DEN), cap);
+    const remaining = Math.min(Math.max(0, kgToMl(weightKg)), cap);
     const pct       = Math.min(100, Math.max(0,(remaining/cap)*100));
     const ts        = d.ts ? new Date(d.ts) : null;
     const stale     = ts ? (Date.now()-ts.getTime())>10*60*1000 : true;
