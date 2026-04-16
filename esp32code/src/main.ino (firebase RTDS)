@@ -28,21 +28,30 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define DT 18
 #define SCK 19
 
+#define BUZZER 5
+#define LED1 32
+#define LED2 14
+
 // ================= WIFI =================
-const char* ssid = "RMK";
-const char* password = "hrishi22";
+const char* ssid = "MVHS_EXT";
+const char* password = "gt25233040";
 
 HX711 scale;
 
 unsigned long lastUpload = 0;
 unsigned long lastDisplay = 0;
+unsigned long lastBlink = 0;
+unsigned long lastBuzz = 0;
 
 float lastSentVolume = 0;
+
+bool ledState = false;
+bool buzzerState = false;
 
 // ================= FAST READ =================
 float fast_read() {
   if (scale.is_ready()) {
-    return scale.get_units(3);  // light averaging
+    return scale.get_units(3);
   }
   return weight_kg;
 }
@@ -79,9 +88,12 @@ void setup() {
     while (true);
   }
 
+  pinMode(BUZZER, OUTPUT);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+
   drawCentered("Smart IV Boot", "Initializing");
 
-  // HX711
   scale.begin(DT, SCK);
   scale.set_scale(calibration);
 
@@ -89,12 +101,11 @@ void setup() {
   delay(5000);
   scale.tare();
 
-  // WiFi
   drawCentered("Connecting WiFi", "");
   Serial.print("[WIFI] Connecting");
 
   WiFi.begin(ssid, password);
-  WiFi.setSleep(false);  // 🔥 reduce latency
+  WiFi.setSleep(false);
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
@@ -118,7 +129,7 @@ int firebaseRequest(const String& path, const String& json) {
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
 
-  int code = http.PUT(json);  // only PUT (faster)
+  int code = http.PUT(json);
   http.end();
 
   return code;
@@ -131,9 +142,8 @@ void loop() {
     WiFi.begin(ssid, password);
   }
 
-  // -------- FAST READ --------
+  // -------- READ --------
   float reading = fast_read();
-
   if (abs(reading) < 0.001) reading = 0;
 
   weight_kg = reading;
@@ -144,6 +154,31 @@ void loop() {
   if (percentage >= 50) statusText = "NORMAL";
   else if (percentage >= 20) statusText = "LOW";
   else statusText = "CRITICAL";
+
+  // -------- ALERT SYSTEM --------
+  if (percentage < 20) {
+
+    // 🔊 Pulsed buzzer (soft beeps)
+    if (millis() - lastBuzz > (buzzerState ? 50 : 250)) {
+      lastBuzz = millis();
+      buzzerState = !buzzerState;
+      digitalWrite(BUZZER, buzzerState);
+    }
+
+    // 🔴 Alternate blinking LEDs
+    if (millis() - lastBlink > 30) {
+      lastBlink = millis();
+      ledState = !ledState;
+
+      digitalWrite(LED1, ledState);
+      digitalWrite(LED2, !ledState);
+    }
+
+  } else {
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, LOW);
+  }
 
   // -------- SERIAL --------
   Serial.print("Volume: ");
@@ -163,13 +198,11 @@ void loop() {
     drawCentered(line1, statusText);
   }
 
-  // -------- FAST FIREBASE --------
+  // -------- FIREBASE --------
   if (millis() - lastUpload > 300 && WiFi.status() == WL_CONNECTED) {
     lastUpload = millis();
 
-    // send only if change is noticeable
     if (abs(volume_ml - lastSentVolume) > 1.0) {
-
       lastSentVolume = volume_ml;
 
       String json = "{\"weight\":" + String(weight_kg, 3) +
@@ -182,5 +215,5 @@ void loop() {
     }
   }
 
-  delay(50);  // fast loop
+  delay(50);
 }
