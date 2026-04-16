@@ -13,10 +13,9 @@ const char* RTDB_URL = "https://hospital-dashboard-d5d1b-default-rtdb.asia-south
 float weight_kg = 0;
 float volume_ml = 0;
 
-// ✅ FINAL CALIBRATION
 float calibration = 270300;
 
-float max_volume = 1000.0;
+float max_volume = 100.0;
 float percentage = 0.0;
 String statusText = "INIT";
 
@@ -30,26 +29,25 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define SCK 19
 
 // ================= WIFI =================
-const char* ssid = "MVHS_EXT";
-const char* password = "gt25233040";
+const char* ssid = "RMK";
+const char* password = "hrishi22";
 
 HX711 scale;
 
 unsigned long lastUpload = 0;
 unsigned long lastDisplay = 0;
 
-// =========================================================
-// Stable averaging
-float stable_read() {
-  float sum = 0;
-  for (int i = 0; i < 30; i++) {
-    sum += scale.get_units(1);
-    delay(5);
+float lastSentVolume = 0;
+
+// ================= FAST READ =================
+float fast_read() {
+  if (scale.is_ready()) {
+    return scale.get_units(3);  // light averaging
   }
-  return sum / 30;
+  return weight_kg;
 }
 
-// =========================================================
+// ================= DISPLAY =================
 void drawCentered(String line1, String line2) {
   display.clearDisplay();
   display.setTextSize(1);
@@ -96,6 +94,7 @@ void setup() {
   Serial.print("[WIFI] Connecting");
 
   WiFi.begin(ssid, password);
+  WiFi.setSleep(false);  // 🔥 reduce latency
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED) {
@@ -112,15 +111,16 @@ void setup() {
 }
 
 // =========================================================
-int firebaseRequest(const String& path, const String& json, bool usePut) {
+int firebaseRequest(const String& path, const String& json) {
   HTTPClient http;
   String url = String(RTDB_URL) + path + ".json";
 
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
 
-  int code = usePut ? http.PUT(json) : http.POST(json);
+  int code = http.PUT(json);  // only PUT (faster)
   http.end();
+
   return code;
 }
 
@@ -131,11 +131,10 @@ void loop() {
     WiFi.begin(ssid, password);
   }
 
-  // -------- READ --------
-  float reading = stable_read();
+  // -------- FAST READ --------
+  float reading = fast_read();
 
-  // Remove tiny drift
-  if (abs(reading) < 0.002) reading = 0;
+  if (abs(reading) < 0.001) reading = 0;
 
   weight_kg = reading;
   volume_ml = weight_kg * 1000.0;
@@ -151,11 +150,11 @@ void loop() {
   Serial.print(volume_ml, 1);
   Serial.print(" mL | ");
   Serial.print(percentage, 1);
-  Serial.print(" % | Status: ");
+  Serial.print(" % | ");
   Serial.println(statusText);
 
   // -------- OLED --------
-  if (millis() - lastDisplay > 1000) {
+  if (millis() - lastDisplay > 500) {
     lastDisplay = millis();
 
     String line1 = String((int)volume_ml) + "mL " + String((int)percentage) + "% ";
@@ -164,19 +163,24 @@ void loop() {
     drawCentered(line1, statusText);
   }
 
-  // -------- FIREBASE --------
-  if (millis() - lastUpload > 5000 && WiFi.status() == WL_CONNECTED) {
+  // -------- FAST FIREBASE --------
+  if (millis() - lastUpload > 300 && WiFi.status() == WL_CONNECTED) {
     lastUpload = millis();
 
-    String json = "{\"weight\":" + String(weight_kg, 3) +
-                  ",\"percentage\":" + String(percentage, 1) +
-                  ",\"ts\":" + String(millis()) + "}";
+    // send only if change is noticeable
+    if (abs(volume_ml - lastSentVolume) > 1.0) {
 
-    firebaseRequest("devices/" + String(DEVICE_ID) + "/latest", json, true);
-    firebaseRequest("devices/" + String(DEVICE_ID) + "/readings", json, false);
+      lastSentVolume = volume_ml;
 
-    Serial.println("[FIREBASE] Synced");
+      String json = "{\"weight\":" + String(weight_kg, 3) +
+                    ",\"percentage\":" + String(percentage, 1) +
+                    ",\"ts\":" + String(millis()) + "}";
+
+      firebaseRequest("devices/" + String(DEVICE_ID) + "/latest", json);
+
+      Serial.println("[FIREBASE FAST]");
+    }
   }
 
-  delay(100);
+  delay(50);  // fast loop
 }
