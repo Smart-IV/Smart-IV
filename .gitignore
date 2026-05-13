@@ -1,0 +1,29 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build output
+dist/
+build/
+out/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+
+# Secrets / local config
+config.h
+.env
+.env.local
+*.secret
+.vscode/
+web\current-site\local.config.js
+web\archive\local.config.js
+web/current-site/local.config.js
+web/archive/local.config.js

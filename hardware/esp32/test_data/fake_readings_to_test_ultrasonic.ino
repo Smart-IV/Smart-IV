@@ -2,18 +2,19 @@
 #include <Firebase_ESP_Client.h>
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
+#include "../current/config.h"
 
 // ================= CONFIGURATION =================
-#define WIFI_SSID     "RMK"
-#define WIFI_PASSWORD "135792468"
+#define WIFI_SSID SMARTIV_WIFI_SSID
+#define WIFI_PASSWORD SMARTIV_WIFI_PASSWORD
 
 // Firebase credentials — DO NOT CHANGE
-#define API_KEY      "AIzaSyDixq5gmWhy2QVSKwlDwraBNvu1yY-cCrM"
-#define DATABASE_URL "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define API_KEY SMARTIV_FIREBASE_API_KEY
+#define DATABASE_URL SMARTIV_FIREBASE_DATABASE_URL
 
 // ================= DEVICE ID =================
 // This must match the "Device ID" you enter in the website when assigning a patient
-#define DEVICE_ID "3270756"
+#define DEVICE_ID SMARTIV_DEVICE_ID
 
 // ================= ULTRASONIC PINS =================
 #define TRIG_PIN 18

@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include "HX711.h"
 #include "ThingSpeak.h"
+#include "../current/config.h"
 
 // ================= VARIABLES =================
 float D = 0;                 // Weight in kg
@@ -17,13 +18,13 @@ bool isMuted = false;
 #define BUZZER 4
 
 // ================= WIFI =================
-const char* ssid = "Wokwi-GUEST";
-const char* password = "";
+const char* ssid = SMARTIV_WIFI_SSID;
+const char* password = SMARTIV_WIFI_PASSWORD;
 
 WiFiClient client;
 
-unsigned long channelID = 3270756;
-const char* writeAPIKey = "8N5WGZK0XIEGD081";
+unsigned long channelID = SMARTIV_THINGSPEAK_CHANNEL_ID;
+const char* writeAPIKey = SMARTIV_THINGSPEAK_WRITE_API_KEY;
 
 HX711 scale;
 

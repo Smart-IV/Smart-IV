@@ -1136,6 +1136,7 @@ tbody td{padding:13px 15px;font-size:.82rem;vertical-align:middle;}
   </div><div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="./local.config.js"></script>
 <script type="module">
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, doc, onSnapshot, setDoc, deleteDoc, getDocs, addDoc, getDoc, query, orderBy, limit, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -1145,24 +1146,25 @@ import { getDatabase, ref, onValue, off } from "https://www.gstatic.com/firebase
 // NURSE ACCOUNTS — Add / edit nurses here
 // Format: 'NURSE_ID': { password, name, role }
 // ═══════════════════════════════════════════════════════════════
-const NURSE_ACCOUNTS = {
-  'NURSE001': { password: 'Ward1@2024',  name: 'Nurse One',    role: 'Ward Nurse'  },
-  'NURSE002': { password: 'Ward2@2024',  name: 'Nurse Two',    role: 'Ward Nurse'  },
-  'NURSE003': { password: 'ICU3@2024',   name: 'Nurse Three',  role: 'ICU Nurse'   },
-  'ADMIN001': { password: 'Admin@2024',  name: 'Ward Admin',   role: 'Ward Admin'  },
+const LOCAL_CFG = window.SMART_IV_LOCAL_CONFIG || {};
+const NURSE_ACCOUNTS = LOCAL_CFG.nurseAccounts || {
+  'NURSE001': { password: 'CHANGE_ME_NURSE001', name: 'Nurse One',   role: 'Ward Nurse' },
+  'NURSE002': { password: 'CHANGE_ME_NURSE002', name: 'Nurse Two',   role: 'Ward Nurse' },
+  'NURSE003': { password: 'CHANGE_ME_NURSE003', name: 'Nurse Three', role: 'ICU Nurse'  },
+  'ADMIN001': { password: 'CHANGE_ME_ADMIN001', name: 'Ward Admin',  role: 'Ward Admin' },
 };
 
 // ═══════════════════════════════════════════════════════════════
 // FIREBASE CONFIG (Firestore only — no Auth)
 // ═══════════════════════════════════════════════════════════════
-const HARDCODED_CONFIG = {
-  apiKey: "AIzaSyDixq5gmWhy2QVSKwlDwraBNvu1yY-cCrM",
-  authDomain: "hospital-dashboard-d5d1b.firebaseapp.com",
-  projectId: "hospital-dashboard-d5d1b",
-  storageBucket: "hospital-dashboard-d5d1b.firebasestorage.app",
-  messagingSenderId: "202596574387",
-  appId: "1:202596574387:web:e2da34eaccc3ff93f8bcc6",
-  databaseURL: "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app",
+const HARDCODED_CONFIG = LOCAL_CFG.firebaseConfig || {
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
 };
 const FIREBASE_CONFIG = JSON.parse(localStorage.getItem('hm_firebase_config') || 'null') || HARDCODED_CONFIG;
 
@@ -1292,6 +1294,18 @@ const SESSION_KEY  = 'hm_session';
 const INACT_MS     = 8 * 60 * 60 * 1000; // 8 hours
 let   _inactTimer  = null;
 
+// DEMO MODE BYPASS FOR HACKATHON
+// Set DEMO_MODE = false to restore login authentication
+const DEMO_MODE = true;
+
+function getDemoNurseSession() {
+  const fallback = { id: 'DEMO001', name: 'Demo Nurse', role: 'Demo' };
+  const demoId = NURSE_ACCOUNTS['ADMIN001'] ? 'ADMIN001' : (Object.keys(NURSE_ACCOUNTS)[0] || '');
+  if (!demoId) return fallback;
+  const account = NURSE_ACCOUNTS[demoId];
+  return { id: demoId, name: account.name, role: account.role };
+}
+
 function startInactivityTimer() {
   clearTimeout(_inactTimer);
   _inactTimer = setTimeout(() => { doLogout(true); }, INACT_MS);
@@ -1335,6 +1349,16 @@ function showLoginScreen() {
 
 // Check if already logged in from previous session
 window.addEventListener('DOMContentLoaded', () => {
+  // DEMO MODE BYPASS FOR HACKATHON
+  // Set DEMO_MODE = false to restore login authentication
+  if (DEMO_MODE) {
+    const demoNurse = getDemoNurseSession();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(demoNurse));
+    initFirebase(FIREBASE_CONFIG);
+    showDashboard(demoNurse);
+    return;
+  }
+
   const saved = localStorage.getItem(SESSION_KEY);
   if (saved) {
     try {
@@ -1401,6 +1425,18 @@ window.doLogout = function(auto = false) {
   clearTimeout(_inactTimer);
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPass').value  = '';
+
+  // DEMO MODE BYPASS FOR HACKATHON
+  // Set DEMO_MODE = false to restore login authentication
+  if (DEMO_MODE) {
+    const demoNurse = getDemoNurseSession();
+    localStorage.setItem(SESSION_KEY, JSON.stringify(demoNurse));
+    initFirebase(FIREBASE_CONFIG);
+    showDashboard(demoNurse);
+    if (typeof showToast === 'function') showToast('🔓 Demo mode active', 'success');
+    return;
+  }
+
   showLoginScreen();
   if (typeof showToast === 'function') showToast(auto ? '⏱ Session expired — signed out' : '👋 Signed out successfully', auto ? 'error' : 'success');
 };

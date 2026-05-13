@@ -4,10 +4,11 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "config.h"
 
 // ================= DEVICE =================
-const char* DEVICE_ID = "ESP1";
-const char* RTDB_URL = "https://hospital-dashboard-d5d1b-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const char* DEVICE_ID = SMARTIV_DEVICE_ID;
+const char* RTDB_URL = SMARTIV_FIREBASE_DATABASE_URL;
 
 // ================= VARIABLES =================
 float weight_kg = 0;
@@ -33,8 +34,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 #define LED2 14
 
 // ================= WIFI =================
-const char* ssid = "MVHS_EXT";
-const char* password = "gt25233040";
+const char* ssid = SMARTIV_WIFI_SSID;
+const char* password = SMARTIV_WIFI_PASSWORD;
 
 HX711 scale;
 
