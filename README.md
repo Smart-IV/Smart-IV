@@ -1,96 +1,62 @@
+# Live Demo
+
+https://smart-iv.github.io/Smart-IV/
+
+**Demo mode is enabled for hackathon evaluation.** Login is temporarily bypassed in the live dashboard flow so judges can access and review features quickly.
+
 # Smart-IV
 
-Smart-IV is an IoT IV-fluid monitoring system with ESP32 firmware and a Firebase-backed web dashboard for real-time patient monitoring.
+Smart-IV is an IoT IV-fluid monitoring platform combining ESP32 hardware and a Firebase-backed web dashboard for ward-level clinical monitoring.
 
-## Features
+## Core Features
 
 - Real-time IV fluid monitoring
-- Firebase RTDB integration
+- ESP32 integration for bedside telemetry
+- Firebase RTDB synchronization
 - OLED display monitoring
-- Ultrasonic sensor level detection
-- Web dashboard monitoring
-- ESP32-based IoT architecture
-- Alert/notification system
+- Ultrasonic fluid level sensing
+- Live dashboard monitoring
+- Alert system for low/critical IV levels
+- Ward/patient assignment system
+- Nurse monitoring workflow
+- Demo dashboard access for evaluation
 
-## Architecture
+## System Flow
 
-1. **ESP32 firmware** reads sensor data, computes fluid metrics, and uploads updates.
-2. **Firebase (RTDB + Firestore)** stores device streams and dashboard application data.
-3. **Web dashboard** visualizes live status, patient registry, alerts, and reports.
+1. **ESP32 nodes** read ultrasonic measurements, compute fluid levels, and publish updates.
+2. **Firebase (RTDB + Firestore)** synchronizes telemetry and dashboard data.
+3. **Web dashboard** supports assignment, monitoring, alerts, and review workflows.
 
-## Setup
+## Quick Setup
 
-### ESP32 setup
+### ESP32
 
 1. Copy `hardware/esp32/current/config.example.h` to `hardware/esp32/current/config.h`.
-2. Fill your local credentials in `config.h`.
+2. Add local credentials in `config.h`.
 3. Open the required `.ino` sketch in Arduino IDE and upload.
 
-### Web setup
+### Web Dashboard
 
 1. Copy:
-   - `web/current-site/local.config.example.js` -> `web/current-site/local.config.js`
+   - `local.config.example.js` -> `local.config.js`
    - `web/archive/local.config.example.js` -> `web/archive/local.config.js`
-2. Fill local Firebase and nurse credential values in each `local.config.js`.
-3. Serve/deploy the web folder as usual.
+2. Fill Firebase and local nurse credentials in each `local.config.js`.
+3. Open `index.html` (or deploy repository root).
 
-### Optional env reference
+## GitHub Pages Deployment
 
-Use `.env.example` as a reference list of required values. Do not commit `.env` or `.env.local`.
+Deploy from:
 
-## Deployment (Netlify)
+- **Branch:** `main`
+- **Folder:** `/(root)`
 
-For current dashboard deployment, publish from:
-
-- `web/current-site`
-
-This preserves the existing path and behavior compatibility.
-
-## Folder Structure
-
-```text
-Smart-IV/
-├── README.md
-├── LICENSE
-├── .gitignore
-├── .env.example
-├── app/
-│   └── apk/
-│       └── app.apk
-├── docs/
-│   ├── architecture.md
-│   ├── features.md
-│   └── setup_guide.md
-├── hardware/
-│   └── esp32/
-│       ├── README.md
-│       ├── archive/
-│       │   └── smart_iv_thingspeak_old.ino
-│       ├── current/
-│       │   ├── smart_iv_firebase.ino
-│       │   ├── config.example.h
-│       │   └── config.h (ignored)
-│       ├── diagrams/
-│       │   └── diagram.json
-│       └── test_data/
-│           └── fake_readings_to_test_ultrasonic.ino
-├── web/
-│   ├── current-site/
-│   │   ├── index.html
-│   │   ├── local.config.example.js
-│   │   └── local.config.js (ignored)
-│   └── archive/
-│       ├── index.html
-│       ├── local.config.example.js
-│       └── local.config.js (ignored)
-```
+The active dashboard is now served from repository root. `web/archive/` is preserved as the legacy version.
 
 ## Security Notes
 
-- No real credentials should be committed.
-- Keep all sensitive values only in ignored local config files.
-- Rotate previously exposed secrets (WiFi, Firebase keys, ThingSpeak keys, nurse passwords) before production use.
-- Validate Firebase and database security rules before public deployment.
+- Never commit real credentials.
+- Keep sensitive values only in ignored local config files.
+- Validate Firebase security rules before production use.
 
 ## License
 
