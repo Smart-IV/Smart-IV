@@ -23,7 +23,6 @@ config.h
 .env.local
 *.secret
 .vscode/
-local.config.js
 web\current-site\local.config.js
 web\archive\local.config.js
 web/current-site/local.config.js
